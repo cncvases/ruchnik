@@ -67,17 +67,11 @@ export function useAssignments() {
 }
 
 export async function confirmAssignment(id: string) {
-  const { error } = await supabase
-    .from('record_workers')
-    .update({ status: 'confirmed', confirmed_at: new Date().toISOString() })
-    .eq('id', id)
+  const { error } = await supabase.rpc('confirm_assignment', { assignment_id: id })
   if (error) throw error
 }
 
 export async function rejectAssignment(id: string) {
-  const { error } = await supabase
-    .from('record_workers')
-    .delete()
-    .eq('id', id)
+  const { error } = await supabase.rpc('reject_assignment', { assignment_id: id })
   if (error) throw error
 }
