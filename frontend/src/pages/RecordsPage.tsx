@@ -76,7 +76,7 @@ export function RecordsPage() {
 
   return (
     <div className="flex flex-col h-full overflow-y-auto pb-24">
-      <div className="sticky top-0 z-20 bg-white">
+      <div className="bg-white">
       <PageHeader title="Записи" right={
         <button onClick={() => setShowFilters(p => !p)} className={`p-2 rounded-xl ${showFilters ? 'bg-blue-100 text-blue-600' : 'text-gray-500'}`}>
           <Filter size={20} />
