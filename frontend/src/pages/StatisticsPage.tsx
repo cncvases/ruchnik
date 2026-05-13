@@ -28,13 +28,15 @@ export function StatisticsPage() {
   const { from, to } = getPeriodDates(period)
   const { records } = useRecords({ dateFrom: from, dateTo: to })
 
-  const totalIncome = records.filter(r => r.type === 'income').reduce((s, r) => s + Number(r.amount), 0)
+  const paidIncome = records.filter(r => r.type === 'income' && r.status === 'paid').reduce((s, r) => s + Number(r.amount), 0)
+  const pendingIncome = records.filter(r => r.type === 'income' && r.status === 'pending').reduce((s, r) => s + Number(r.amount), 0)
+  const totalIncome = paidIncome
   const totalExpense = records.filter(r => r.type === 'expense').reduce((s, r) => s + Number(r.amount), 0)
   const profit = totalIncome - totalExpense
 
-  // Group by category for pie
+  // Group by category for pie (only paid income)
   const incomeByCategory = Object.values(
-    records.filter(r => r.type === 'income').reduce<Record<string, { name: string; value: number }>>((acc, r) => {
+    records.filter(r => r.type === 'income' && r.status === 'paid').reduce<Record<string, { name: string; value: number }>>((acc, r) => {
       const key = r.category_id ?? 'other'
       const name = r.category?.name ?? 'Інше'
       acc[key] = { name, value: (acc[key]?.value ?? 0) + Number(r.amount) }
@@ -51,10 +53,11 @@ export function StatisticsPage() {
     }, {})
   )
 
-  // Group by day/week for bar chart
+  // Group by day/week for bar chart (only paid income)
   const barData = (() => {
     const map: Record<string, { date: string; income: number; expense: number }> = {}
     records.forEach(r => {
+      if (r.type === 'income' && r.status === 'pending') return
       const key = period === 'year' ? r.date.slice(0, 7) : r.date
       if (!map[key]) map[key] = { date: key, income: 0, expense: 0 }
       map[key][r.type as 'income' | 'expense'] += Number(r.amount)
@@ -80,7 +83,7 @@ export function StatisticsPage() {
 
       <div className="px-4 pt-4 flex flex-col gap-5">
         {/* Summary cards */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <div className="bg-green-50 rounded-2xl p-3 text-center">
             <div className="text-xs text-green-600 font-medium mb-1">Дохід</div>
             <div className="text-green-700 font-bold text-sm">{formatMoney(totalIncome)}</div>
@@ -92,6 +95,10 @@ export function StatisticsPage() {
           <div className={`rounded-2xl p-3 text-center ${profit >= 0 ? 'bg-blue-50' : 'bg-orange-50'}`}>
             <div className={`text-xs font-medium mb-1 ${profit >= 0 ? 'text-blue-600' : 'text-orange-500'}`}>Прибуток</div>
             <div className={`font-bold text-sm ${profit >= 0 ? 'text-blue-700' : 'text-orange-600'}`}>{formatMoney(profit)}</div>
+          </div>
+          <div className="bg-orange-50 rounded-2xl p-3 text-center">
+            <div className="text-xs text-orange-500 font-medium mb-1">Очікується</div>
+            <div className="text-orange-600 font-bold text-sm">{formatMoney(pendingIncome)}</div>
           </div>
         </div>
 
