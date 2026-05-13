@@ -167,7 +167,7 @@ function TagsSection() {
 
 export function SettingsPage() {
   return (
-    <div className="flex flex-col h-full overflow-y-auto pb-20">
+    <div className="flex flex-col h-full overflow-y-auto pb-28">
       <PageHeader title="Налаштування" />
       <div className="px-4 py-4 flex flex-col gap-4">
         <CategorySection type="income" label="Категорії доходів" />

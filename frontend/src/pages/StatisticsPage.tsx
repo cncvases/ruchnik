@@ -65,7 +65,7 @@ export function StatisticsPage() {
   const periods: [Period, string][] = [['week', 'Тиждень'], ['month', 'Місяць'], ['year', 'Рік']]
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto pb-20">
+    <div className="flex flex-col h-full overflow-y-auto pb-28">
       <PageHeader title="Статистика" />
 
       {/* Period */}

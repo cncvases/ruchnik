@@ -77,7 +77,7 @@ export function ClientDetailPage() {
   )
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto pb-20">
+    <div className="flex flex-col h-full overflow-y-auto pb-28">
       {/* Header */}
       <header className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-white sticky top-0 z-40">
         <button onClick={() => navigate('/clients')} className="text-blue-500"><ChevronLeft size={22} /></button>

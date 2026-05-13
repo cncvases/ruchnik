@@ -109,7 +109,7 @@ export function RecordForm({ initialType = 'income', initialValues, onSubmit, on
   const labelCls = 'block text-xs font-medium text-gray-500 mb-1'
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4 pb-24">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4 pb-36">
 
       {/* Type toggle */}
       <div className="flex rounded-xl overflow-hidden border border-gray-200">
@@ -287,7 +287,7 @@ export function RecordForm({ initialType = 'income', initialValues, onSubmit, on
       </div>
 
       {/* Buttons */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 flex gap-3">
+      <div className="fixed bottom-14 left-0 right-0 p-4 bg-white border-t border-gray-100 flex gap-3 z-40">
         <button type="button" onClick={onCancel} className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 font-medium">Скасувати</button>
         <button type="submit" disabled={saving}
           className={`flex-1 py-3 rounded-xl font-medium text-white transition-colors ${values.type === 'income' ? 'bg-green-500' : 'bg-red-500'} disabled:opacity-50`}>
