@@ -1,14 +1,17 @@
 import { useState } from 'react'
-import { Plus, TrendingUp, TrendingDown } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Plus, TrendingUp, TrendingDown, Pencil, Copy, Trash2, ChevronDown } from 'lucide-react'
 import { RecordForm } from '../components/RecordForm'
-import { createRecord } from '../hooks/useRecords'
+import { createRecord, deleteRecord } from '../hooks/useRecords'
 import { useRecords } from '../hooks/useRecords'
-import { formatMoney } from '../lib/format'
+import { formatMoney, formatDateShort } from '../lib/format'
 import type { RecordType } from '../types'
 
 export function HomePage() {
+  const navigate = useNavigate()
   const [showForm, setShowForm] = useState(false)
   const [formType, setFormType] = useState<RecordType>('income')
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const today = new Date().toISOString().slice(0, 10)
   const { records, refetch } = useRecords({ dateFrom: today, dateTo: today })
@@ -19,6 +22,31 @@ export function HomePage() {
   function openForm(type: RecordType) {
     setFormType(type)
     setShowForm(true)
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm('Видалити запис?')) return
+    await deleteRecord(id)
+    setExpandedId(null)
+    refetch()
+  }
+
+  async function handleCopy(record: any) {
+    await createRecord({
+      type: record.type,
+      amount: Number(record.amount),
+      date: new Date().toISOString().slice(0, 10),
+      description: record.description,
+      category_id: record.category_id,
+      subcategory_id: record.subcategory_id,
+      client_id: record.client_id,
+      payment_method: record.payment_method,
+      status: record.status,
+      dimensions: record.dimensions,
+      photos: [],
+      tag_ids: record.tags?.map((t: any) => t.id) ?? [],
+    })
+    refetch()
   }
 
   async function handleSubmit(values: any) {
@@ -97,29 +125,104 @@ export function HomePage() {
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            {records.map(record => (
-              <div key={record.id} className="bg-white rounded-2xl border border-gray-100 px-4 py-3 flex items-center gap-3">
-                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0 ${record.type === 'income' ? 'bg-green-500' : 'bg-red-500'}`}>
-                  {record.type === 'income' ? '↑' : '↓'}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-gray-900 truncate">
-                    {record.category?.name ?? (record.type === 'income' ? 'Дохід' : 'Витрата')}
-                  </div>
-                  <div className="text-xs text-gray-400 truncate">{record.client?.name ?? record.description ?? ''}</div>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <div className={`font-semibold text-sm ${record.type === 'income' ? 'text-green-600' : 'text-red-500'}`}>
-                    {record.type === 'income' ? '+' : '−'}{formatMoney(Number(record.amount))}
-                  </div>
-                  {record.type === 'income' && (
-                    <div className={`text-xs ${record.status === 'paid' ? 'text-green-500' : 'text-orange-400'}`}>
-                      {record.status === 'paid' ? 'Оплачено' : 'Очікує'}
+            {records.map(record => {
+              const expanded = expandedId === record.id
+              return (
+                <div key={record.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                  {/* Collapsed row */}
+                  <button className="w-full px-4 py-3 flex items-center gap-3 text-left" onClick={() => setExpandedId(expanded ? null : record.id)}>
+                    {record.photos?.length > 0
+                      ? <img src={record.photos[0]} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+                      : <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0 ${record.type === 'income' ? 'bg-green-500' : 'bg-red-500'}`}>
+                          {record.type === 'income' ? '↑' : '↓'}
+                        </div>
+                    }
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-gray-900 truncate">
+                        {record.category?.name ?? (record.type === 'income' ? 'Дохід' : 'Витрата')}
+                      </div>
+                      <div className="text-xs text-gray-400 truncate">{record.client?.name ?? record.description ?? ''}</div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="text-right">
+                        <div className={`font-semibold text-sm ${record.type === 'income' ? 'text-green-600' : 'text-red-500'}`}>
+                          {record.type === 'income' ? '+' : '−'}{formatMoney(Number(record.amount))}
+                        </div>
+                        {record.type === 'income' && (
+                          <div className={`text-xs ${record.status === 'paid' ? 'text-green-500' : 'text-orange-400'}`}>
+                            {record.status === 'paid' ? 'Оплачено' : 'Очікує'}
+                          </div>
+                        )}
+                      </div>
+                      <ChevronDown size={16} className={`text-gray-300 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                    </div>
+                  </button>
+
+                  {/* Expanded details */}
+                  {expanded && (
+                    <div className="px-4 pb-3 border-t border-gray-50">
+                      <div className="py-2 flex flex-col gap-1.5 text-xs text-gray-500">
+                        <div className="flex justify-between">
+                          <span>Дата</span>
+                          <span className="text-gray-800">{formatDateShort(record.date)}</span>
+                        </div>
+                        {record.category && (
+                          <div className="flex justify-between">
+                            <span>Категорія</span>
+                            <span className="text-gray-800">{record.category.name}</span>
+                          </div>
+                        )}
+                        {record.client && (
+                          <div className="flex justify-between">
+                            <span>Замовник</span>
+                            <span className="text-gray-800">{record.client.name}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <span>Оплата</span>
+                          <span className="text-gray-800">{{ cash: 'Готівка', card: 'Картка', fop: 'ФОП' }[record.payment_method]}</span>
+                        </div>
+                        {record.description && (
+                          <div className="flex justify-between gap-4">
+                            <span>Опис</span>
+                            <span className="text-gray-800 text-right">{record.description}</span>
+                          </div>
+                        )}
+                        {record.dimensions && Object.keys(record.dimensions).length > 0 && (
+                          <div className="flex justify-between">
+                            <span>Розміри</span>
+                            <span className="text-gray-800">
+                              {[record.dimensions.width, record.dimensions.height, record.dimensions.thickness].filter(Boolean).join(' × ')} см
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      {record.photos?.length > 0 && (
+                        <div className="flex gap-2 mb-2 flex-wrap">
+                          {record.photos.map((url: string, i: number) => (
+                            <img key={i} src={url} alt="" className="w-16 h-16 rounded-xl object-cover" />
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex gap-2 pt-2 border-t border-gray-50">
+                        <button onClick={() => navigate(`/records/${record.id}/edit`)}
+                          className="flex-1 flex items-center justify-center gap-1 text-xs text-blue-500 py-2 rounded-xl bg-blue-50">
+                          <Pencil size={13} /> Редагувати
+                        </button>
+                        <button onClick={() => handleCopy(record)}
+                          className="flex-1 flex items-center justify-center gap-1 text-xs text-gray-600 py-2 rounded-xl bg-gray-100">
+                          <Copy size={13} /> Копіювати
+                        </button>
+                        <button onClick={() => handleDelete(record.id)}
+                          className="flex-1 flex items-center justify-center gap-1 text-xs text-red-500 py-2 rounded-xl bg-red-50">
+                          <Trash2 size={13} /> Видалити
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

@@ -110,9 +110,12 @@ export function RecordsPage() {
         {records.map(record => (
           <div key={record.id} className="bg-white rounded-2xl border border-gray-100 px-4 py-3">
             <div className="flex items-start gap-3">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0 mt-0.5 ${record.type === 'income' ? 'bg-green-500' : 'bg-red-500'}`}>
-                {record.type === 'income' ? '↑' : '↓'}
-              </div>
+              {record.photos?.length > 0
+                ? <img src={record.photos[0]} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0 mt-0.5" />
+                : <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0 mt-0.5 ${record.type === 'income' ? 'bg-green-500' : 'bg-red-500'}`}>
+                    {record.type === 'income' ? '↑' : '↓'}
+                  </div>
+              }
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-900 truncate">
