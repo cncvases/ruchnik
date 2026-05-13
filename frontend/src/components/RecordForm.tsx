@@ -128,6 +128,8 @@ export function RecordForm({ initialType = 'income', initialValues, onSubmit, on
     try {
       await onSubmit(values)
       haptic('medium')
+    } catch (e: any) {
+      alert('Помилка: ' + (e?.message ?? String(e)))
     } finally {
       setSaving(false)
     }
