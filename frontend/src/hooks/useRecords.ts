@@ -49,7 +49,11 @@ export function useRecords(filters: Filters = {}) {
 
   useEffect(() => { fetch() }, [fetch])
 
-  return { records, loading, error, refetch: fetch }
+  function updateLocalStatus(id: string, status: 'paid' | 'pending') {
+    setRecords(prev => prev.map(r => r.id === id ? { ...r, status } : r))
+  }
+
+  return { records, loading, error, refetch: fetch, updateLocalStatus }
 }
 
 export async function createRecord(payload: Partial<Record> & { tag_ids?: string[] }) {

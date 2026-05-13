@@ -13,7 +13,7 @@ export function HomePage() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const today = new Date().toISOString().slice(0, 10)
-  const { records, refetch } = useRecords({ dateFrom: today, dateTo: today })
+  const { records, refetch, updateLocalStatus } = useRecords({ dateFrom: today, dateTo: today })
 
   const todayIncome = records.filter(r => r.type === 'income').reduce((s, r) => s + Number(r.amount), 0)
   const todayExpense = records.filter(r => r.type === 'expense').reduce((s, r) => s + Number(r.amount), 0)
@@ -49,8 +49,8 @@ export function HomePage() {
   }
 
   async function handleStatusChange(id: string, status: 'paid' | 'pending') {
+    updateLocalStatus(id, status)
     await updateRecord(id, { status })
-    refetch()
   }
 
   async function handleSubmit(values: any) {

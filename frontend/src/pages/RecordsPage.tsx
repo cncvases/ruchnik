@@ -35,7 +35,7 @@ export function RecordsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const { from, to } = period === 'custom' ? { from: customFrom, to: customTo } : getPeriodDates(period)
-  const { records, loading, refetch } = useRecords({
+  const { records, loading, refetch, updateLocalStatus } = useRecords({
     type: typeFilter || undefined,
     clientId: clientFilter || undefined,
     dateFrom: from || undefined,
@@ -54,8 +54,8 @@ export function RecordsPage() {
   }
 
   async function handleStatusChange(id: string, status: 'paid' | 'pending') {
+    updateLocalStatus(id, status)
     await updateRecord(id, { status })
-    refetch()
   }
 
   async function handleCopy(record: any) {
