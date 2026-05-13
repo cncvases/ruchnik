@@ -58,14 +58,22 @@ export function HomePage() {
   }
 
   async function handleConfirm(id: string) {
-    await confirmAssignment(id)
-    refetchAssignments()
+    try {
+      await confirmAssignment(id)
+      refetchAssignments()
+    } catch (e: any) {
+      alert('Помилка підтвердження: ' + (e?.message ?? String(e)))
+    }
   }
 
   async function handleReject(id: string) {
     if (!confirm('Відхилити завдання?')) return
-    await rejectAssignment(id)
-    refetchAssignments()
+    try {
+      await rejectAssignment(id)
+      refetchAssignments()
+    } catch (e: any) {
+      alert('Помилка відхилення: ' + (e?.message ?? String(e)))
+    }
   }
 
   async function handleSubmit(values: any) {
