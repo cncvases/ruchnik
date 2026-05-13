@@ -129,7 +129,9 @@ function WorkersList() {
   const [newName, setNewName] = useState('')
   const [newPhone, setNewPhone] = useState('')
   const [newRole, setNewRole] = useState('')
+  const [newTg, setNewTg] = useState('')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const filtered = workers.filter(w =>
     w.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -141,11 +143,14 @@ function WorkersList() {
     e.preventDefault()
     if (!newName.trim()) return
     setSaving(true)
+    setError(null)
     try {
-      await createWorker({ name: newName.trim(), phone: newPhone || null, role: newRole || null })
+      await createWorker({ name: newName.trim(), phone: newPhone || null, role: newRole || null, telegram_username: newTg.replace('@', '') || null })
       await refetch()
       setShowForm(false)
-      setNewName(''); setNewPhone(''); setNewRole('')
+      setNewName(''); setNewPhone(''); setNewRole(''); setNewTg('')
+    } catch (e: any) {
+      setError(e.message)
     } finally {
       setSaving(false)
     }
@@ -158,8 +163,10 @@ function WorkersList() {
           <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ім'я працівника *" className={inputCls} required />
           <input value={newPhone} onChange={e => setNewPhone(e.target.value)} placeholder="Телефон" type="tel" className={inputCls} />
           <input value={newRole} onChange={e => setNewRole(e.target.value)} placeholder="Роль / посада" className={inputCls} />
+          <input value={newTg} onChange={e => setNewTg(e.target.value)} placeholder="Telegram @username" className={inputCls} />
+          {error && <p className="text-xs text-red-500">{error}</p>}
           <div className="flex gap-2">
-            <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2 rounded-xl border border-gray-200 text-sm text-gray-600">Скасувати</button>
+            <button type="button" onClick={() => { setShowForm(false); setError(null) }} className="flex-1 py-2 rounded-xl border border-gray-200 text-sm text-gray-600">Скасувати</button>
             <button type="submit" disabled={saving} className="flex-1 py-2 rounded-xl bg-purple-500 text-white text-sm font-medium disabled:opacity-50">
               {saving ? '...' : 'Додати'}
             </button>
@@ -186,18 +193,28 @@ function WorkersList() {
           </div>
         )}
         {filtered.map(worker => (
-          <button key={worker.id} onClick={() => navigate(`/workers/${worker.id}`)}
-            className="bg-white rounded-2xl border border-gray-100 px-4 py-3 flex items-center gap-3 text-left w-full">
-            <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
-              {worker.name.charAt(0).toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-gray-900">{worker.name}</div>
-              {worker.role && <div className="text-xs text-purple-400 mt-0.5">{worker.role}</div>}
-              {worker.phone && <div className="text-xs text-gray-400">{worker.phone}</div>}
-            </div>
+          <div key={worker.id} className="bg-white rounded-2xl border border-gray-100 px-4 py-3 flex items-center gap-3">
+            <button onClick={() => navigate(`/workers/${worker.id}`)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
+              <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                {worker.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-gray-900">{worker.name}</div>
+                {worker.role && <div className="text-xs text-purple-400 mt-0.5">{worker.role}</div>}
+                {worker.phone && <div className="text-xs text-gray-400">{worker.phone}</div>}
+                {worker.telegram_username && <div className="text-xs text-blue-400">@{worker.telegram_username}</div>}
+              </div>
+            </button>
+            {worker.telegram_username && (
+              <button
+                onClick={() => window.open(`https://t.me/${worker.telegram_username}?text=${encodeURIComponent('Привіт! Запрошую тебе приєднатися до мене як працівник у додатку Ручнік. Напиши мені для підтвердження.')}`, '_blank')}
+                className="flex-shrink-0 px-2 py-1.5 bg-blue-50 text-blue-500 rounded-xl text-xs font-medium"
+              >
+                Запросити
+              </button>
+            )}
             <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
-          </button>
+          </div>
         ))}
       </div>
     </>

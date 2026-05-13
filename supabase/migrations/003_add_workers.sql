@@ -5,6 +5,7 @@ create table workers (
   phone text,
   role text,
   notes text,
+  telegram_username text,
   created_at timestamptz default now()
 );
 

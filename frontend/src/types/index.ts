@@ -47,6 +47,7 @@ export interface Worker {
   phone: string | null
   role: string | null
   notes: string | null
+  telegram_username: string | null
   created_at: string
 }
 
