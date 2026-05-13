@@ -72,6 +72,7 @@ export function RecordsPage() {
       dimensions: record.dimensions,
       photos: [],
       tag_ids: record.tags?.map((t: any) => t.id) ?? [],
+      worker_assignments: record.record_workers?.map((rw: any) => ({ worker_id: rw.worker_id, amount: Number(rw.amount_paid) })) ?? [],
     })
     refetch()
   }

@@ -177,6 +177,17 @@ export function RecordCard({ record, expanded, onToggle, onDelete, onCopy, onSta
                       <div className="text-gray-800">{record.description}</div>
                     </div>
                   )}
+                  {record.record_workers && record.record_workers.length > 0 && (
+                    <div className="col-span-2">
+                      <div className="text-gray-400 mb-0.5">Виплачено</div>
+                      <div className="text-purple-600 font-medium">
+                        {formatMoney(record.record_workers.reduce((s, rw) => s + Number(rw.amount_paid), 0))}
+                        <span className="text-gray-400 font-normal text-xs ml-1">
+                          ({record.record_workers.map(rw => `${rw.worker?.name ?? '?'} ${formatMoney(Number(rw.amount_paid))}`).join(', ')})
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

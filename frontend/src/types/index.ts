@@ -51,6 +51,17 @@ export interface Worker {
   created_at: string
 }
 
+export interface RecordWorker {
+  id: string
+  record_id: string
+  worker_id: string
+  amount_paid: number
+  status: 'pending' | 'confirmed'
+  confirmed_at: string | null
+  created_at: string
+  worker?: Worker
+}
+
 export interface Dimensions {
   width?: number
   height?: number
@@ -79,4 +90,5 @@ export interface Record {
   category?: Category
   subcategory?: Subcategory
   tags?: Tag[]
+  record_workers?: RecordWorker[]
 }

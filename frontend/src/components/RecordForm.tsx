@@ -3,9 +3,15 @@ import { X, Camera, ChevronDown } from 'lucide-react'
 import type { RecordType, PaymentMethod, RecordStatus, Dimensions } from '../types'
 import { useCategories, useTags } from '../hooks/useCategories'
 import { useClients, createClient } from '../hooks/useClients'
+import { useWorkers } from '../hooks/useWorkers'
 import { supabase } from '../lib/supabase'
-import { toInputDate } from '../lib/format'
+import { toInputDate, formatMoney } from '../lib/format'
 import { haptic } from '../lib/telegram'
+
+interface WorkerAssignment {
+  worker_id: string
+  amount: string
+}
 
 interface FormValues {
   type: RecordType
@@ -21,6 +27,7 @@ interface FormValues {
   tag_ids: string[]
   photos: string[]
   dimensions: Dimensions
+  worker_assignments: WorkerAssignment[]
 }
 
 interface Props {
@@ -46,6 +53,7 @@ export function RecordForm({ initialType = 'income', initialValues, onSubmit, on
     tag_ids: [],
     photos: [],
     dimensions: {},
+    worker_assignments: [],
     ...initialValues,
   })
   const [saving, setSaving] = useState(false)
@@ -58,11 +66,29 @@ export function RecordForm({ initialType = 'income', initialValues, onSubmit, on
   const { categories } = useCategories(values.type)
   const { tags } = useTags()
   const { clients, refetch: refetchClients } = useClients()
+  const { workers } = useWorkers()
 
   const selectedCategory = categories.find(c => c.id === values.category_id)
+  const assignedWorkerIds = values.worker_assignments.map(wa => wa.worker_id)
+  const availableWorkers = workers.filter(w => !assignedWorkerIds.includes(w.id))
+  const totalWorkerPay = values.worker_assignments.reduce((s, wa) => s + (Number(wa.amount) || 0), 0)
 
   function set<K extends keyof FormValues>(key: K, val: FormValues[K]) {
     setValues(prev => ({ ...prev, [key]: val }))
+  }
+
+  function addWorker(worker_id: string) {
+    set('worker_assignments', [...values.worker_assignments, { worker_id, amount: '' }])
+  }
+
+  function removeWorker(worker_id: string) {
+    set('worker_assignments', values.worker_assignments.filter(wa => wa.worker_id !== worker_id))
+  }
+
+  function setWorkerAmount(worker_id: string, amount: string) {
+    set('worker_assignments', values.worker_assignments.map(wa =>
+      wa.worker_id === worker_id ? { ...wa, amount } : wa
+    ))
   }
 
   async function uploadPhoto(file: File) {
@@ -119,7 +145,7 @@ export function RecordForm({ initialType = 'income', initialValues, onSubmit, on
           <button
             key={t}
             type="button"
-            onClick={() => { set('type', t); set('category_id', ''); set('subcategory_id', '') }}
+            onClick={() => { set('type', t); set('category_id', ''); set('subcategory_id', ''); set('worker_assignments', []) }}
             className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
               values.type === t
                 ? t === 'income' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
@@ -198,6 +224,54 @@ export function RecordForm({ initialType = 'income', initialValues, onSubmit, on
         </div>
       )}
 
+      {/* Workers (income only) */}
+      {values.type === 'income' && workers.length > 0 && (
+        <div>
+          <label className={labelCls}>Працівники</label>
+          <div className="flex flex-col gap-2">
+            {values.worker_assignments.map(wa => {
+              const worker = workers.find(w => w.id === wa.worker_id)
+              if (!worker) return null
+              return (
+                <div key={wa.worker_id} className="flex items-center gap-2 bg-purple-50 rounded-xl px-3 py-2">
+                  <div className="w-7 h-7 rounded-full bg-purple-200 text-purple-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                    {worker.name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="flex-1 text-sm text-gray-800 truncate">{worker.name}</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    placeholder="Сума ₴"
+                    value={wa.amount}
+                    onChange={e => setWorkerAmount(wa.worker_id, e.target.value)}
+                    className="w-24 border border-purple-200 rounded-lg px-2 py-1.5 text-sm bg-white focus:outline-none focus:border-purple-400 text-right"
+                  />
+                  <button type="button" onClick={() => removeWorker(wa.worker_id)} className="text-gray-400 flex-shrink-0">
+                    <X size={16} />
+                  </button>
+                </div>
+              )
+            })}
+            {availableWorkers.length > 0 && (
+              <select
+                value=""
+                onChange={e => { if (e.target.value) { addWorker(e.target.value); e.target.value = '' } }}
+                className={inputCls + ' text-purple-600'}
+              >
+                <option value="">+ Додати працівника</option>
+                {availableWorkers.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+              </select>
+            )}
+            {totalWorkerPay > 0 && (
+              <div className="flex justify-between text-xs text-gray-500 px-1">
+                <span>Виплачено працівникам:</span>
+                <span className="font-medium text-purple-600">{formatMoney(totalWorkerPay)}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Subcategory */}
       {selectedCategory?.subcategories?.length ? (
         <div>
@@ -208,7 +282,6 @@ export function RecordForm({ initialType = 'income', initialValues, onSubmit, on
           </select>
         </div>
       ) : null}
-
 
       {/* Payment method */}
       <div>

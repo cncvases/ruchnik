@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Plus, TrendingUp, TrendingDown } from 'lucide-react'
+import { Plus, TrendingUp, TrendingDown, CheckCircle, XCircle } from 'lucide-react'
 import { RecordForm } from '../components/RecordForm'
 import { RecordCard } from '../components/RecordCard'
 import { createRecord, deleteRecord, updateRecord } from '../hooks/useRecords'
 import { useRecords } from '../hooks/useRecords'
-import { formatMoney } from '../lib/format'
+import { useAssignments, confirmAssignment, rejectAssignment } from '../hooks/useAssignments'
+import { formatMoney, formatDateShort } from '../lib/format'
 import type { RecordType } from '../types'
 
 export function HomePage() {
@@ -14,6 +15,9 @@ export function HomePage() {
 
   const today = new Date().toISOString().slice(0, 10)
   const { records, refetch, updateLocalStatus } = useRecords({ dateFrom: today, dateTo: today })
+  const { assignments, refetch: refetchAssignments } = useAssignments()
+
+  const pendingAssignments = assignments.filter(a => a.status === 'pending')
 
   const todayIncome = records.filter(r => r.type === 'income').reduce((s, r) => s + Number(r.amount), 0)
   const todayExpense = records.filter(r => r.type === 'expense').reduce((s, r) => s + Number(r.amount), 0)
@@ -53,6 +57,17 @@ export function HomePage() {
     await updateRecord(id, { status })
   }
 
+  async function handleConfirm(id: string) {
+    await confirmAssignment(id)
+    refetchAssignments()
+  }
+
+  async function handleReject(id: string) {
+    if (!confirm('Відхилити завдання?')) return
+    await rejectAssignment(id)
+    refetchAssignments()
+  }
+
   async function handleSubmit(values: any) {
     await createRecord({
       type: values.type,
@@ -68,6 +83,7 @@ export function HomePage() {
       dimensions: Object.keys(values.dimensions).length ? values.dimensions : null,
       photos: values.photos,
       tag_ids: values.tag_ids,
+      worker_assignments: values.worker_assignments?.filter((wa: any) => wa.worker_id && wa.amount).map((wa: any) => ({ worker_id: wa.worker_id, amount: Number(wa.amount) })),
     })
     setShowForm(false)
     refetch()
@@ -120,29 +136,71 @@ export function HomePage() {
         </button>
       </div>
 
-      {/* Today's records */}
-      <div className="px-4 flex-1 overflow-y-auto pb-20">
-        <h2 className="text-sm font-medium text-gray-500 mb-2">Записи за сьогодні</h2>
-        {records.length === 0 ? (
-          <div className="text-center text-gray-400 py-12 text-sm">
-            <p className="text-4xl mb-3">📋</p>
-            <p>Немає записів за сьогодні</p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {records.map(record => (
-              <RecordCard
-                key={record.id}
-                record={record}
-                expanded={expandedId === record.id}
-                onToggle={() => setExpandedId(expandedId === record.id ? null : record.id)}
-                onDelete={handleDelete}
-                onCopy={handleCopy}
-                onStatusChange={handleStatusChange}
-              />
-            ))}
+      <div className="px-4 flex-1 overflow-y-auto pb-20 flex flex-col gap-4">
+        {/* Pending assignments from master */}
+        {pendingAssignments.length > 0 && (
+          <div>
+            <h2 className="text-sm font-medium text-purple-600 mb-2">Завдання від майстра ({pendingAssignments.length})</h2>
+            <div className="flex flex-col gap-2">
+              {pendingAssignments.map(a => (
+                <div key={a.id} className="bg-white rounded-2xl border border-purple-100 overflow-hidden">
+                  <div className="flex gap-3 p-3">
+                    {a.record?.photos?.[0] && (
+                      <img src={a.record.photos[0]} alt="" className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-gray-900 truncate">
+                        {a.record?.title ?? 'Робота'}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-0.5">{a.record?.date ? formatDateShort(a.record.date) : ''}</div>
+                      {a.record?.dimensions && Object.keys(a.record.dimensions).length > 0 && (
+                        <div className="text-xs text-gray-400">
+                          {[a.record.dimensions.width, a.record.dimensions.height, a.record.dimensions.thickness].filter(Boolean).join(' × ')} см
+                        </div>
+                      )}
+                      <div className="text-base font-bold text-purple-600 mt-1">{formatMoney(Number(a.amount_paid))}</div>
+                    </div>
+                  </div>
+                  <div className="flex border-t border-purple-50">
+                    <button onClick={() => handleReject(a.id)}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm text-red-500">
+                      <XCircle size={16} /> Відхилити
+                    </button>
+                    <button onClick={() => handleConfirm(a.id)}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm text-green-600 font-medium border-l border-purple-50">
+                      <CheckCircle size={16} /> Підтвердити
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
+
+        {/* Today's records */}
+        <div>
+          <h2 className="text-sm font-medium text-gray-500 mb-2">Записи за сьогодні</h2>
+          {records.length === 0 ? (
+            <div className="text-center text-gray-400 py-12 text-sm">
+              <p className="text-4xl mb-3">📋</p>
+              <p>Немає записів за сьогодні</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {records.map(record => (
+                <RecordCard
+                  key={record.id}
+                  record={record}
+                  expanded={expandedId === record.id}
+                  onToggle={() => setExpandedId(expandedId === record.id ? null : record.id)}
+                  onDelete={handleDelete}
+                  onCopy={handleCopy}
+                  onStatusChange={handleStatusChange}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

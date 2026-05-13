@@ -40,6 +40,7 @@ export function EditRecordPage() {
       dimensions: Object.keys(values.dimensions).length ? values.dimensions : null,
       photos: values.photos,
       tag_ids: values.tag_ids,
+      worker_assignments: values.worker_assignments?.filter((wa: any) => wa.worker_id && wa.amount).map((wa: any) => ({ worker_id: wa.worker_id, amount: Number(wa.amount) })),
     })
     navigate('/records')
   }
@@ -69,6 +70,7 @@ export function EditRecordPage() {
           photos: record.photos ?? [],
           dimensions: (record.dimensions as any) ?? {},
           tag_ids: (record as any).tags ?? [],
+          worker_assignments: (record as any).record_workers?.map((rw: any) => ({ worker_id: rw.worker_id, amount: String(rw.amount_paid) })) ?? [],
         }}
         onSubmit={handleSubmit}
         onCancel={() => navigate('/records')}
