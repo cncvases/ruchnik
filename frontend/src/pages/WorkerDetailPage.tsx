@@ -39,7 +39,7 @@ export function WorkerDetailPage() {
 
   function handleInvite() {
     if (!worker?.telegram_username) return
-    const text = encodeURIComponent('Привіт! Запрошую тебе приєднатися до мене як працівник у додатку Ручнік. Напиши мені для підтвердження.')
+    const text = encodeURIComponent('Привіт! Запрошую тебе приєднатися до мене як працівник у додатку Ручнік.\n\nВідкрий додаток через бота: https://t.me/R0003_bot')
     window.open(`https://t.me/${worker.telegram_username}?text=${text}`, '_blank')
   }
 

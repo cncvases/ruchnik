@@ -207,7 +207,7 @@ function WorkersList() {
             </button>
             {worker.telegram_username && (
               <button
-                onClick={() => window.open(`https://t.me/${worker.telegram_username}?text=${encodeURIComponent('Привіт! Запрошую тебе приєднатися до мене як працівник у додатку Ручнік. Напиши мені для підтвердження.')}`, '_blank')}
+                onClick={() => window.open(`https://t.me/${worker.telegram_username}?text=${encodeURIComponent('Привіт! Запрошую тебе приєднатися до мене як працівник у додатку Ручнік.\n\nВідкрий додаток через бота: https://t.me/R0003_bot')}`, '_blank')}
                 className="flex-shrink-0 px-2 py-1.5 bg-blue-50 text-blue-500 rounded-xl text-xs font-medium"
               >
                 Запросити
