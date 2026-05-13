@@ -75,7 +75,8 @@ export function RecordsPage() {
   const periods: [Period, string][] = [['today', 'Сьогодні'], ['week', 'Тиждень'], ['month', 'Місяць'], ['custom', 'Вибрати']]
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-y-auto pb-24">
+      <div className="sticky top-0 z-20 bg-white">
       <PageHeader title="Записи" right={
         <button onClick={() => setShowFilters(p => !p)} className={`p-2 rounded-xl ${showFilters ? 'bg-blue-100 text-blue-600' : 'text-gray-500'}`}>
           <Filter size={20} />
@@ -129,8 +130,10 @@ export function RecordsPage() {
         </span>
       </div>
 
+      </div>
+
       {/* List */}
-      <div className="flex-1 overflow-y-auto pb-24 px-4 pt-3 flex flex-col gap-2">
+      <div className="px-4 pt-3 pb-4 flex flex-col gap-2">
         {loading && <div className="text-center text-gray-400 py-12 text-sm">Завантаження...</div>}
         {!loading && records.length === 0 && (
           <div className="text-center text-gray-400 py-12 text-sm">
