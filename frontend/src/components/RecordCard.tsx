@@ -150,23 +150,25 @@ export function RecordCard({ record, expanded, onToggle, onDelete, onCopy }: Pro
                     </div>
                   )}
                 </div>
-                {/* Решта — як є */}
-                <div className="flex justify-between gap-2">
-                  <span className="flex-shrink-0">Оплата</span>
-                  <span className="text-gray-800">{{ cash: 'Готівка', card: 'Картка', fop: 'ФОП' }[record.payment_method]}</span>
+                {/* Оплата + Розміри — 2 в рядку */}
+                <div className="grid grid-cols-2 gap-x-2 gap-y-2">
+                  <div>
+                    <div className="text-gray-400 mb-0.5">Оплата</div>
+                    <div className="text-gray-800">{{ cash: 'Готівка', card: 'Картка', fop: 'ФОП' }[record.payment_method]}</div>
+                  </div>
+                  {record.dimensions && Object.keys(record.dimensions).length > 0 && (
+                    <div>
+                      <div className="text-gray-400 mb-0.5">Розміри</div>
+                      <div className="text-gray-800">
+                        {[record.dimensions.width, record.dimensions.height, record.dimensions.thickness].filter(Boolean).join(' × ')} см
+                      </div>
+                    </div>
+                  )}
                 </div>
                 {record.description && (
                   <div className="flex justify-between gap-2">
                     <span className="flex-shrink-0">Опис</span>
                     <span className="text-gray-800 text-right">{record.description}</span>
-                  </div>
-                )}
-                {record.dimensions && Object.keys(record.dimensions).length > 0 && (
-                  <div className="flex justify-between gap-2">
-                    <span className="flex-shrink-0">Розміри</span>
-                    <span className="text-gray-800 text-right">
-                      {[record.dimensions.width, record.dimensions.height, record.dimensions.thickness].filter(Boolean).join(' × ')} см
-                    </span>
                   </div>
                 )}
               </div>
