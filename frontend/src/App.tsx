@@ -1,15 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { HashRouter, Routes, Route } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav'
 import { HomePage } from './pages/HomePage'
-import { RecordsPage } from './pages/RecordsPage'
-import { StatisticsPage } from './pages/StatisticsPage'
-import { ClientsPage } from './pages/ClientsPage'
-import { ClientDetailPage } from './pages/ClientDetailPage'
-import { SettingsPage } from './pages/SettingsPage'
-import { EditRecordPage } from './pages/EditRecordPage'
 import { initTelegram, getTelegramInitData, isDev } from './lib/telegram'
 import { signInWithTelegram } from './lib/supabase'
+
+const RecordsPage = lazy(() => import('./pages/RecordsPage').then(m => ({ default: m.RecordsPage })))
+const StatisticsPage = lazy(() => import('./pages/StatisticsPage').then(m => ({ default: m.StatisticsPage })))
+const ClientsPage = lazy(() => import('./pages/ClientsPage').then(m => ({ default: m.ClientsPage })))
+const ClientDetailPage = lazy(() => import('./pages/ClientDetailPage').then(m => ({ default: m.ClientDetailPage })))
+const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })))
+const EditRecordPage = lazy(() => import('./pages/EditRecordPage').then(m => ({ default: m.EditRecordPage })))
 
 function App() {
   const [ready, setReady] = useState(false)
@@ -59,15 +60,17 @@ function App() {
     <HashRouter>
       <div className="flex flex-col h-dvh overflow-hidden">
         <main className="flex-1 overflow-hidden">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/records" element={<RecordsPage />} />
-            <Route path="/records/:id/edit" element={<EditRecordPage />} />
-            <Route path="/statistics" element={<StatisticsPage />} />
-            <Route path="/clients" element={<ClientsPage />} />
-            <Route path="/clients/:id" element={<ClientDetailPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-          </Routes>
+          <Suspense fallback={<div className="flex items-center justify-center h-full"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>}>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/records" element={<RecordsPage />} />
+              <Route path="/records/:id/edit" element={<EditRecordPage />} />
+              <Route path="/statistics" element={<StatisticsPage />} />
+              <Route path="/clients" element={<ClientsPage />} />
+              <Route path="/clients/:id" element={<ClientDetailPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+            </Routes>
+          </Suspense>
         </main>
         <BottomNav />
       </div>
