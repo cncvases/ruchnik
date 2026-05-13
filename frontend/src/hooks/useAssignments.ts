@@ -29,6 +29,7 @@ export function useAssignments() {
       const myUserId = user?.user_metadata?.user_db_id
 
       const { data, error } = await supabase.rpc('get_pending_assignments')
+      console.log('assignments data:', data, 'error:', error)
       if (error) {
         console.error('get_pending_assignments error:', error)
         setAssignments([])

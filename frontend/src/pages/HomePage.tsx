@@ -59,8 +59,10 @@ export function HomePage() {
 
   async function handleConfirm(id: string) {
     try {
+      console.log('confirming:', id)
       await confirmAssignment(id)
-      refetchAssignments()
+      console.log('confirmed ok')
+      await refetchAssignments()
     } catch (e: any) {
       alert('Помилка підтвердження: ' + (e?.message ?? String(e)))
     }
@@ -69,8 +71,10 @@ export function HomePage() {
   async function handleReject(id: string) {
     if (!confirm('Відхилити завдання?')) return
     try {
+      console.log('rejecting:', id)
       await rejectAssignment(id)
-      refetchAssignments()
+      console.log('rejected ok')
+      await refetchAssignments()
     } catch (e: any) {
       alert('Помилка відхилення: ' + (e?.message ?? String(e)))
     }
