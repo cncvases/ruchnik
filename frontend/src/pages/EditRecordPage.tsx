@@ -28,6 +28,7 @@ export function EditRecordPage() {
     if (!id) return
     await updateRecord(id, {
       type: values.type,
+      title: values.title || null,
       amount: Number(values.amount),
       date: values.date,
       description: values.description || null,
@@ -56,6 +57,7 @@ export function EditRecordPage() {
         initialType={record.type}
         initialValues={{
           type: record.type,
+          title: record.title ?? '',
           amount: String(record.amount),
           date: record.date,
           description: record.description ?? '',

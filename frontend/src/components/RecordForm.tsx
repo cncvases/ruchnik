@@ -9,6 +9,7 @@ import { haptic } from '../lib/telegram'
 
 interface FormValues {
   type: RecordType
+  title: string
   amount: string
   date: string
   description: string
@@ -33,6 +34,7 @@ interface Props {
 export function RecordForm({ initialType = 'income', initialValues, onSubmit, onCancel, submitLabel = 'Зберегти' }: Props) {
   const [values, setValues] = useState<FormValues>({
     type: initialType,
+    title: '',
     amount: '',
     date: toInputDate(),
     description: '',
@@ -129,6 +131,18 @@ export function RecordForm({ initialType = 'income', initialValues, onSubmit, on
         ))}
       </div>
 
+      {/* Title */}
+      <div>
+        <label className={labelCls}>Назва</label>
+        <input
+          type="text"
+          placeholder={values.type === 'income' ? 'Назва доходу...' : 'Назва витрати...'}
+          value={values.title}
+          onChange={e => set('title', e.target.value)}
+          className={inputCls}
+        />
+      </div>
+
       {/* Amount + Date */}
       <div className="grid grid-cols-2 gap-3">
         <div>
@@ -200,7 +214,7 @@ export function RecordForm({ initialType = 'income', initialValues, onSubmit, on
       <div>
         <label className={labelCls}>Спосіб оплати</label>
         <div className="flex gap-2">
-          {([['cash', 'Готівка'], ['card', 'Картка'], ['fop', 'ФОП']] as [PaymentMethod, string][]).map(([v, l]) => (
+          {([['cash', 'Готівка'], ['card', 'Картка']] as [PaymentMethod, string][]).map(([v, l]) => (
             <button key={v} type="button" onClick={() => set('payment_method', v)}
               className={`flex-1 py-2 text-sm rounded-xl border transition-colors ${values.payment_method === v ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-600 border-gray-200'}`}>
               {l}

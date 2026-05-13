@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Filter } from 'lucide-react'
-import { useRecords, deleteRecord, createRecord } from '../hooks/useRecords'
+import { useRecords, deleteRecord, createRecord, updateRecord } from '../hooks/useRecords'
 import { useClients } from '../hooks/useClients'
 import { PageHeader } from '../components/PageHeader'
 import { RecordCard } from '../components/RecordCard'
@@ -50,6 +50,11 @@ export function RecordsPage() {
     if (!confirm('Видалити запис?')) return
     await deleteRecord(id)
     setExpandedId(null)
+    refetch()
+  }
+
+  async function handleStatusChange(id: string, status: 'paid' | 'pending') {
+    await updateRecord(id, { status })
     refetch()
   }
 
@@ -148,6 +153,7 @@ export function RecordsPage() {
             onToggle={() => setExpandedId(expandedId === record.id ? null : record.id)}
             onDelete={handleDelete}
             onCopy={handleCopy}
+            onStatusChange={handleStatusChange}
           />
         ))}
       </div>

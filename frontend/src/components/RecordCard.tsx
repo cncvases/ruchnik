@@ -10,6 +10,7 @@ interface Props {
   onToggle: () => void
   onDelete: (id: string) => void
   onCopy: (record: Record) => void
+  onStatusChange: (id: string, status: 'paid' | 'pending') => void
 }
 
 function PhotoGallery({ photos, startIndex, onClose }: { photos: string[]; startIndex: number; onClose: () => void }) {
@@ -56,10 +57,12 @@ function PhotoGallery({ photos, startIndex, onClose }: { photos: string[]; start
   )
 }
 
-export function RecordCard({ record, expanded, onToggle, onDelete, onCopy }: Props) {
+export function RecordCard({ record, expanded, onToggle, onDelete, onCopy, onStatusChange }: Props) {
   const navigate = useNavigate()
   const [gallery, setGallery] = useState<number | null>(null)
   const photos: string[] = record.photos ?? []
+
+  const displayTitle = record.title || record.category?.name || (record.type === 'income' ? 'Дохід' : 'Витрата')
 
   return (
     <>
@@ -77,9 +80,7 @@ export function RecordCard({ record, expanded, onToggle, onDelete, onCopy }: Pro
               </div>
           }
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium text-gray-900 truncate">
-              {record.category?.name ?? (record.type === 'income' ? 'Дохід' : 'Витрата')}
-            </div>
+            <div className="text-sm font-medium text-gray-900 truncate">{displayTitle}</div>
             <div className="text-xs text-gray-400 truncate">{record.client?.name ?? record.description ?? ''}</div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -88,9 +89,19 @@ export function RecordCard({ record, expanded, onToggle, onDelete, onCopy }: Pro
                 {record.type === 'income' ? '+' : '−'}{formatMoney(Number(record.amount))}
               </div>
               {record.type === 'income' && (
-                <div className={`text-xs ${record.status === 'paid' ? 'text-green-500' : 'text-orange-400'}`}>
+                <button
+                  onClick={e => {
+                    e.stopPropagation()
+                    onStatusChange(record.id, record.status === 'paid' ? 'pending' : 'paid')
+                  }}
+                  className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
+                    record.status === 'paid'
+                      ? 'text-green-600 border-green-200 bg-green-50'
+                      : 'text-orange-500 border-orange-200 bg-orange-50'
+                  }`}
+                >
                   {record.status === 'paid' ? 'Оплачено' : 'Очікує'}
-                </div>
+                </button>
               )}
             </div>
             <ChevronDown size={16} className={`text-gray-300 transition-transform ${expanded ? 'rotate-180' : ''}`} />
@@ -125,7 +136,6 @@ export function RecordCard({ record, expanded, onToggle, onDelete, onCopy }: Pro
 
               {/* Details — right column */}
               <div className="flex-1 min-w-0 px-3 py-2 flex flex-col gap-2 text-xs text-gray-500">
-                {/* Сума + Дата — 2 в рядку */}
                 <div className="grid grid-cols-2 gap-x-2 gap-y-2">
                   <div>
                     <div className="text-gray-400 mb-0.5">Сума</div>
@@ -149,9 +159,6 @@ export function RecordCard({ record, expanded, onToggle, onDelete, onCopy }: Pro
                       <div className="text-gray-800 truncate">{record.client.name}</div>
                     </div>
                   )}
-                </div>
-                {/* Оплата + Розміри — 2 в рядку */}
-                <div className="grid grid-cols-2 gap-x-2 gap-y-2">
                   <div>
                     <div className="text-gray-400 mb-0.5">Оплата</div>
                     <div className="text-gray-800">{{ cash: 'Готівка', card: 'Картка', fop: 'ФОП' }[record.payment_method]}</div>
@@ -164,13 +171,13 @@ export function RecordCard({ record, expanded, onToggle, onDelete, onCopy }: Pro
                       </div>
                     </div>
                   )}
+                  {record.description && (
+                    <div className="col-span-2">
+                      <div className="text-gray-400 mb-0.5">Опис</div>
+                      <div className="text-gray-800">{record.description}</div>
+                    </div>
+                  )}
                 </div>
-                {record.description && (
-                  <div className="flex justify-between gap-2">
-                    <span className="flex-shrink-0">Опис</span>
-                    <span className="text-gray-800 text-right">{record.description}</span>
-                  </div>
-                )}
               </div>
             </div>
 

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Plus, TrendingUp, TrendingDown } from 'lucide-react'
 import { RecordForm } from '../components/RecordForm'
 import { RecordCard } from '../components/RecordCard'
-import { createRecord, deleteRecord } from '../hooks/useRecords'
+import { createRecord, deleteRecord, updateRecord } from '../hooks/useRecords'
 import { useRecords } from '../hooks/useRecords'
 import { formatMoney } from '../lib/format'
 import type { RecordType } from '../types'
@@ -48,9 +48,15 @@ export function HomePage() {
     refetch()
   }
 
+  async function handleStatusChange(id: string, status: 'paid' | 'pending') {
+    await updateRecord(id, { status })
+    refetch()
+  }
+
   async function handleSubmit(values: any) {
     await createRecord({
       type: values.type,
+      title: values.title || null,
       amount: Number(values.amount),
       date: values.date,
       description: values.description || null,
@@ -132,6 +138,7 @@ export function HomePage() {
                 onToggle={() => setExpandedId(expandedId === record.id ? null : record.id)}
                 onDelete={handleDelete}
                 onCopy={handleCopy}
+                onStatusChange={handleStatusChange}
               />
             ))}
           </div>

@@ -1,13 +1,12 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { createHmac } from 'https://deno.land/std@0.177.0/node/crypto.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-function verifyTelegramInitData(initData: string, botToken: string): Record<string, string> | null {
+async function verifyTelegramInitData(initData: string, botToken: string): Promise<Record<string, string> | null> {
   const params = new URLSearchParams(initData)
   const hash = params.get('hash')
   if (!hash) return null
@@ -18,8 +17,20 @@ function verifyTelegramInitData(initData: string, botToken: string): Record<stri
     .map(([k, v]) => `${k}=${v}`)
     .join('\n')
 
-  const secretKey = createHmac('sha256', 'WebAppData').update(botToken).digest()
-  const expectedHash = createHmac('sha256', secretKey).update(dataCheckString).digest('hex')
+  const encoder = new TextEncoder()
+  const secretKey = await crypto.subtle.importKey(
+    'raw', encoder.encode('WebAppData'), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  )
+  const secretKeyBytes = await crypto.subtle.sign('HMAC', secretKey, encoder.encode(botToken))
+
+  const dataKey = await crypto.subtle.importKey(
+    'raw', secretKeyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  )
+  const signatureBytes = await crypto.subtle.sign('HMAC', dataKey, encoder.encode(dataCheckString))
+
+  const expectedHash = Array.from(new Uint8Array(signatureBytes))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
 
   if (expectedHash !== hash) return null
 
@@ -37,7 +48,7 @@ serve(async (req) => {
     const { initData } = await req.json()
     const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN')!
 
-    const data = verifyTelegramInitData(initData, botToken)
+    const data = await verifyTelegramInitData(initData, botToken)
     if (!data) {
       return new Response(JSON.stringify({ error: 'Invalid initData' }), {
         status: 401,
@@ -54,7 +65,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
 
-    // Upsert user
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
       .upsert({ telegram_id: telegramId, name }, { onConflict: 'telegram_id' })
@@ -63,17 +73,33 @@ serve(async (req) => {
 
     if (userError) throw userError
 
-    // Sign a JWT for this user
-    const { data: session, error: sessionError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'magiclink',
-      email: `tg${telegramId}@ruchnik.app`,
-      options: { data: { telegram_id: telegramId, user_db_id: user.id } },
-    })
+    const email = `tg${telegramId}@ruchnik.app`
+    const password = `tg-${telegramId}-${botToken.slice(0, 8)}`
 
-    if (sessionError) throw sessionError
+    let authData
+    const { data: signIn, error: signInError } = await supabaseAdmin.auth.signInWithPassword({ email, password })
+    if (signInError) {
+      const { error: signUpError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { telegram_id: telegramId, user_db_id: user.id },
+      })
+      if (signUpError) throw signUpError
+
+      const { data: signIn2, error: signIn2Error } = await supabaseAdmin.auth.signInWithPassword({ email, password })
+      if (signIn2Error) throw signIn2Error
+      authData = signIn2
+    } else {
+      authData = signIn
+    }
 
     return new Response(
-      JSON.stringify({ user, token_hash: session.properties?.hashed_token }),
+      JSON.stringify({
+        user,
+        access_token: authData.session?.access_token,
+        refresh_token: authData.session?.refresh_token,
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   } catch (err) {

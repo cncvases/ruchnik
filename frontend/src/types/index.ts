@@ -1,5 +1,5 @@
 export type RecordType = 'income' | 'expense'
-export type PaymentMethod = 'card' | 'cash' | 'fop'
+export type PaymentMethod = 'card' | 'cash'
 export type RecordStatus = 'paid' | 'pending'
 
 export interface User {
@@ -53,6 +53,7 @@ export interface Record {
   type: RecordType
   amount: number
   date: string
+  title: string | null
   description: string | null
   category_id: string | null
   subcategory_id: string | null
