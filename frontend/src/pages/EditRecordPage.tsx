@@ -10,18 +10,30 @@ export function EditRecordPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [record, setRecord] = useState<Record | null>(null)
+  const [confirmedWorkers, setConfirmedWorkers] = useState<{ worker_id: string; amount_paid: number; name: string }[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!id) return
-    supabase.from('records')
-      .select('*, tags:record_tags(tag_id)')
-      .eq('id', id)
-      .single()
-      .then(({ data }) => {
-        if (data) setRecord({ ...data, tags: data.tags?.map((t: any) => t.tag_id) })
-        setLoading(false)
-      })
+    Promise.all([
+      supabase.from('records').select('*, tags:record_tags(tag_id)').eq('id', id).single(),
+      supabase.from('record_workers').select('worker_id, amount_paid').eq('record_id', id).eq('status', 'pending'),
+      supabase.from('record_workers').select('worker_id, amount_paid, worker:workers(name)').eq('record_id', id).eq('status', 'confirmed'),
+    ]).then(([{ data }, { data: pending }, { data: confirmed }]) => {
+      if (data) {
+        setRecord({
+          ...data,
+          tags: data.tags?.map((t: any) => t.tag_id),
+          record_workers: pending ?? [],
+        })
+      }
+      setConfirmedWorkers((confirmed ?? []).map((rw: any) => ({
+        worker_id: rw.worker_id,
+        amount_paid: Number(rw.amount_paid),
+        name: rw.worker?.name ?? '?',
+      })))
+      setLoading(false)
+    })
   }, [id])
 
   async function handleSubmit(values: any) {
@@ -56,6 +68,7 @@ export function EditRecordPage() {
       </header>
       <RecordForm
         initialType={record.type}
+        confirmedWorkers={confirmedWorkers}
         initialValues={{
           type: record.type,
           title: record.title ?? '',

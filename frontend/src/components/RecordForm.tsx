@@ -33,12 +33,13 @@ interface FormValues {
 interface Props {
   initialType?: RecordType
   initialValues?: Partial<FormValues>
+  confirmedWorkers?: { worker_id: string; amount_paid: number; name: string }[]
   onSubmit: (values: FormValues) => Promise<void>
   onCancel: () => void
   submitLabel?: string
 }
 
-export function RecordForm({ initialType = 'income', initialValues, onSubmit, onCancel, submitLabel = 'Зберегти' }: Props) {
+export function RecordForm({ initialType = 'income', initialValues, confirmedWorkers = [], onSubmit, onCancel, submitLabel = 'Зберегти' }: Props) {
   const [values, setValues] = useState<FormValues>({
     type: initialType,
     title: '',
@@ -266,8 +267,22 @@ export function RecordForm({ initialType = 'income', initialValues, onSubmit, on
             )}
             {totalWorkerPay > 0 && (
               <div className="flex justify-between text-xs text-gray-500 px-1">
-                <span>Виплачено працівникам:</span>
+                <span>Очікує виплати:</span>
                 <span className="font-medium text-purple-600">{formatMoney(totalWorkerPay)}</span>
+              </div>
+            )}
+            {confirmedWorkers.length > 0 && (
+              <div className="border-t border-purple-100 pt-2 mt-1 flex flex-col gap-1.5">
+                <div className="text-xs text-gray-400 px-1">Вже виплачено:</div>
+                {confirmedWorkers.map(cw => (
+                  <div key={cw.worker_id} className="flex items-center gap-2 bg-green-50 rounded-xl px-3 py-2">
+                    <div className="w-7 h-7 rounded-full bg-green-200 text-green-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                      {cw.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="flex-1 text-sm text-gray-700 truncate">{cw.name}</span>
+                    <span className="text-sm font-medium text-green-600">{formatMoney(cw.amount_paid)}</span>
+                  </div>
+                ))}
               </div>
             )}
           </div>

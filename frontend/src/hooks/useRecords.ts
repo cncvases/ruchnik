@@ -98,10 +98,31 @@ export async function updateRecord(id: string, payload: Partial<Record> & { tag_
     }
   }
   if (worker_assignments !== undefined) {
-    await supabase.from('record_workers').delete().eq('record_id', id)
-    if (worker_assignments.length) {
+    const { data: existing } = await supabase
+      .from('record_workers')
+      .select('id, worker_id, amount_paid')
+      .eq('record_id', id)
+      .eq('status', 'pending')
+
+    const existingMap = new Map((existing ?? []).map((e: any) => [e.worker_id, e]))
+    const newMap = new Map(worker_assignments.map(wa => [wa.worker_id, wa]))
+
+    const toDelete = (existing ?? []).filter((e: any) => !newMap.has(e.worker_id)).map((e: any) => e.id)
+    if (toDelete.length) {
+      await supabase.from('record_workers').delete().in('id', toDelete)
+    }
+
+    for (const wa of worker_assignments) {
+      const old = existingMap.get(wa.worker_id) as any
+      if (old && Number(old.amount_paid) !== wa.amount) {
+        await supabase.from('record_workers').update({ amount_paid: wa.amount }).eq('id', old.id)
+      }
+    }
+
+    const toInsert = worker_assignments.filter(wa => !existingMap.has(wa.worker_id))
+    if (toInsert.length) {
       await supabase.from('record_workers').insert(
-        worker_assignments.map(wa => ({ record_id: id, worker_id: wa.worker_id, amount_paid: wa.amount }))
+        toInsert.map(wa => ({ record_id: id, worker_id: wa.worker_id, amount_paid: wa.amount }))
       )
     }
   }
