@@ -129,34 +129,60 @@ export function RecordForm({ initialType = 'income', initialValues, onSubmit, on
         ))}
       </div>
 
-      {/* Amount */}
-      <div>
-        <label className={labelCls}>Сума (₴)</label>
-        <input
-          type="number"
-          inputMode="decimal"
-          placeholder="0"
-          value={values.amount}
-          onChange={e => set('amount', e.target.value)}
-          className={inputCls + ' text-2xl font-bold'}
-          required
-        />
+      {/* Amount + Date */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className={labelCls}>Сума (₴)</label>
+          <input
+            type="number"
+            inputMode="decimal"
+            placeholder="0"
+            value={values.amount}
+            onChange={e => set('amount', e.target.value)}
+            className={inputCls + ' text-xl font-bold'}
+            required
+          />
+        </div>
+        <div>
+          <label className={labelCls}>Дата</label>
+          <input type="date" value={values.date} onChange={e => set('date', e.target.value)} className={inputCls} required />
+        </div>
       </div>
 
-      {/* Date */}
-      <div>
-        <label className={labelCls}>Дата</label>
-        <input type="date" value={values.date} onChange={e => set('date', e.target.value)} className={inputCls} required />
+      {/* Category + Client */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className={labelCls}>Категорія</label>
+          <select value={values.category_id} onChange={e => { set('category_id', e.target.value); set('subcategory_id', '') }} className={inputCls}>
+            <option value="">— оберіть —</option>
+            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+        {values.type === 'income' && !showNewClient && (
+          <div>
+            <label className={labelCls}>Замовник</label>
+            <div className="flex gap-1">
+              <select value={values.client_id} onChange={e => set('client_id', e.target.value)} className={inputCls}>
+                <option value="">— оберіть —</option>
+                {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+              <button type="button" onClick={() => setShowNewClient(true)} className="px-2 py-2 bg-blue-50 text-blue-600 rounded-xl text-sm font-medium whitespace-nowrap">+</button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Category */}
-      <div>
-        <label className={labelCls}>Категорія</label>
-        <select value={values.category_id} onChange={e => { set('category_id', e.target.value); set('subcategory_id', '') }} className={inputCls}>
-          <option value="">— оберіть —</option>
-          {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
-      </div>
+      {/* New client input */}
+      {values.type === 'income' && showNewClient && (
+        <div>
+          <label className={labelCls}>Новий замовник</label>
+          <div className="flex gap-2">
+            <input value={newClientName} onChange={e => setNewClientName(e.target.value)} placeholder="Ім'я замовника" className={inputCls} />
+            <button type="button" onClick={handleAddClient} className="px-3 py-2 bg-green-500 text-white rounded-xl text-sm font-medium">Додати</button>
+            <button type="button" onClick={() => setShowNewClient(false)} className="px-2 py-2 text-gray-400"><X size={18} /></button>
+          </div>
+        </div>
+      )}
 
       {/* Subcategory */}
       {selectedCategory?.subcategories?.length ? (
@@ -169,27 +195,6 @@ export function RecordForm({ initialType = 'income', initialValues, onSubmit, on
         </div>
       ) : null}
 
-      {/* Client (only for income) */}
-      {values.type === 'income' && (
-        <div>
-          <label className={labelCls}>Замовник</label>
-          {!showNewClient ? (
-            <div className="flex gap-2">
-              <select value={values.client_id} onChange={e => set('client_id', e.target.value)} className={inputCls}>
-                <option value="">— оберіть —</option>
-                {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-              <button type="button" onClick={() => setShowNewClient(true)} className="px-3 py-2 bg-blue-50 text-blue-600 rounded-xl text-sm font-medium whitespace-nowrap">+ Новий</button>
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <input value={newClientName} onChange={e => setNewClientName(e.target.value)} placeholder="Ім'я замовника" className={inputCls} />
-              <button type="button" onClick={handleAddClient} className="px-3 py-2 bg-green-500 text-white rounded-xl text-sm font-medium">Додати</button>
-              <button type="button" onClick={() => setShowNewClient(false)} className="px-2 py-2 text-gray-400"><X size={18} /></button>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Payment method */}
       <div>
