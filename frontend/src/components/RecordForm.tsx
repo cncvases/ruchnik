@@ -306,7 +306,7 @@ export function RecordForm({ initialType = 'income', initialValues, onSubmit, on
       </div>
 
       {/* Buttons */}
-      <div className="fixed bottom-14 left-0 right-0 p-4 bg-white border-t border-gray-100 flex gap-3 z-40">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 flex gap-3 z-40" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 72px)' }}>
         <button type="button" onClick={onCancel} className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 font-medium">Скасувати</button>
         <button type="submit" disabled={saving}
           className={`flex-1 py-3 rounded-xl font-medium text-white transition-colors ${values.type === 'income' ? 'bg-green-500' : 'bg-red-500'} disabled:opacity-50`}>
