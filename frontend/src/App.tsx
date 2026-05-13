@@ -7,8 +7,9 @@ import { signInWithTelegram } from './lib/supabase'
 
 const RecordsPage = lazy(() => import('./pages/RecordsPage').then(m => ({ default: m.RecordsPage })))
 const StatisticsPage = lazy(() => import('./pages/StatisticsPage').then(m => ({ default: m.StatisticsPage })))
-const ClientsPage = lazy(() => import('./pages/ClientsPage').then(m => ({ default: m.ClientsPage })))
+const ContactsPage = lazy(() => import('./pages/ContactsPage').then(m => ({ default: m.ContactsPage })))
 const ClientDetailPage = lazy(() => import('./pages/ClientDetailPage').then(m => ({ default: m.ClientDetailPage })))
+const WorkerDetailPage = lazy(() => import('./pages/WorkerDetailPage').then(m => ({ default: m.WorkerDetailPage })))
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })))
 const EditRecordPage = lazy(() => import('./pages/EditRecordPage').then(m => ({ default: m.EditRecordPage })))
 
@@ -66,8 +67,9 @@ function App() {
               <Route path="/records" element={<RecordsPage />} />
               <Route path="/records/:id/edit" element={<EditRecordPage />} />
               <Route path="/statistics" element={<StatisticsPage />} />
-              <Route path="/clients" element={<ClientsPage />} />
+              <Route path="/contacts" element={<ContactsPage />} />
               <Route path="/clients/:id" element={<ClientDetailPage />} />
+              <Route path="/workers/:id" element={<WorkerDetailPage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Routes>
           </Suspense>

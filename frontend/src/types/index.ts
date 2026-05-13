@@ -40,6 +40,16 @@ export interface Tag {
   color: string
 }
 
+export interface Worker {
+  id: string
+  user_id: string
+  name: string
+  phone: string | null
+  role: string | null
+  notes: string | null
+  created_at: string
+}
+
 export interface Dimensions {
   width?: number
   height?: number

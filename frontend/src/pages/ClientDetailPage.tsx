@@ -72,7 +72,7 @@ export function ClientDetailPage() {
   if (!client) return (
     <div className="flex flex-col h-full items-center justify-center text-gray-400">
       <p>Замовника не знайдено</p>
-      <button onClick={() => navigate('/clients')} className="mt-3 text-blue-500 text-sm">← Назад</button>
+      <button onClick={() => navigate('/contacts')} className="mt-3 text-blue-500 text-sm">← Назад</button>
     </div>
   )
 
@@ -80,7 +80,7 @@ export function ClientDetailPage() {
     <div className="flex flex-col h-full overflow-y-auto pb-28">
       {/* Header */}
       <header className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-white sticky top-0 z-40">
-        <button onClick={() => navigate('/clients')} className="text-blue-500"><ChevronLeft size={22} /></button>
+        <button onClick={() => navigate('/contacts')} className="text-blue-500"><ChevronLeft size={22} /></button>
         <h1 className="text-lg font-semibold text-gray-900 flex-1 truncate">{client.name}</h1>
         <button onClick={() => setEditing(p => !p)} className="text-gray-500 p-1"><Pencil size={18} /></button>
         <button onClick={handleDelete} className="text-red-400 p-1"><Trash2 size={18} /></button>
