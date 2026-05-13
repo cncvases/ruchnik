@@ -22,7 +22,7 @@ export function useRecords(filters: Filters = {}) {
     try {
       let q = supabase
         .from('records')
-        .select(`*, client:clients(id,name,phone,telegram_username), category:categories(id,name,color), subcategory:subcategories(id,name), tags:record_tags(tag:tags(id,name,color)), record_workers:record_workers(id,worker_id,amount_paid,status,worker:workers(id,name))`)
+        .select(`*, client:clients(id,name,phone,telegram_username), category:categories(id,name,color), subcategory:subcategories(id,name), tags:record_tags(tag:tags(id,name,color))`)
         .order('date', { ascending: false })
 
       if (filters.type) q = q.eq('type', filters.type)
@@ -34,10 +34,27 @@ export function useRecords(filters: Filters = {}) {
 
       const { data, error: err } = await q
       if (err) throw err
+
       const rows = (data ?? []).map((r: any) => ({
         ...r,
         tags: r.tags?.map((rt: any) => rt.tag).filter(Boolean) ?? [],
+        record_workers: [],
       }))
+
+      // load record_workers separately — safe if table doesn't exist yet
+      if (rows.length) {
+        const ids = rows.map((r: any) => r.id)
+        const { data: rw } = await supabase
+          .from('record_workers')
+          .select('id,record_id,worker_id,amount_paid,status,worker:workers(id,name)')
+          .in('record_id', ids)
+        if (rw) {
+          const byRecord: { [key: string]: any[] } = {}
+          rw.forEach((x: any) => { (byRecord[x.record_id] ??= []).push(x) })
+          rows.forEach((r: any) => { r.record_workers = byRecord[r.id] ?? [] })
+        }
+      }
+
       setRecords(rows)
     } catch (e: any) {
       setError(e.message)
