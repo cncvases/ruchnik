@@ -3,17 +3,18 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/bot.ts",
-    "start": "tsx src/bot.ts"
+    "dev": "tsx watch --env-file=.env src/bot.ts",
+    "start": "tsx --env-file=.env src/bot.ts"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "dotenv": "^17.4.2",
     "grammy": "^1.30.0",
-    "pdf-lib": "^1.17.1",
-    "@supabase/supabase-js": "^2.49.4"
+    "pdf-lib": "^1.17.1"
   },
   "devDependencies": {
-    "tsx": "^4.19.3",
     "@types/node": "^22.15.18",
+    "tsx": "^4.19.3",
     "typescript": "^5.8.3"
   }
 }

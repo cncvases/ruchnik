@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { Bot, InlineKeyboard, InputFile } from 'grammy'
 import { generateReport, generatePdfReport } from './pdf.js'
 import { getClientRecords } from './db.js'
