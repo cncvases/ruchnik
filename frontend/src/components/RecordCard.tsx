@@ -124,23 +124,33 @@ export function RecordCard({ record, expanded, onToggle, onDelete, onCopy }: Pro
               )}
 
               {/* Details — right column */}
-              <div className="flex-1 min-w-0 px-3 py-2 flex flex-col gap-1.5 text-xs text-gray-500">
-                <div className="flex justify-between gap-2">
-                  <span className="flex-shrink-0">Дата</span>
-                  <span className="text-gray-800 text-right">{formatDateShort(record.date)}</span>
+              <div className="flex-1 min-w-0 px-3 py-2 flex flex-col gap-2 text-xs text-gray-500">
+                {/* Сума + Дата — 2 в рядку */}
+                <div className="grid grid-cols-2 gap-x-2 gap-y-2">
+                  <div>
+                    <div className="text-gray-400 mb-0.5">Сума</div>
+                    <div className={`font-semibold ${record.type === 'income' ? 'text-green-600' : 'text-red-500'}`}>
+                      {record.type === 'income' ? '+' : '−'}{formatMoney(Number(record.amount))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-gray-400 mb-0.5">Дата</div>
+                    <div className="text-gray-800">{formatDateShort(record.date)}</div>
+                  </div>
+                  {record.category && (
+                    <div>
+                      <div className="text-gray-400 mb-0.5">Категорія</div>
+                      <div className="text-gray-800 truncate">{record.category.name}</div>
+                    </div>
+                  )}
+                  {record.client && (
+                    <div>
+                      <div className="text-gray-400 mb-0.5">Замовник</div>
+                      <div className="text-gray-800 truncate">{record.client.name}</div>
+                    </div>
+                  )}
                 </div>
-                {record.category && (
-                  <div className="flex justify-between gap-2">
-                    <span className="flex-shrink-0">Категорія</span>
-                    <span className="text-gray-800 text-right truncate">{record.category.name}</span>
-                  </div>
-                )}
-                {record.client && (
-                  <div className="flex justify-between gap-2">
-                    <span className="flex-shrink-0">Замовник</span>
-                    <span className="text-gray-800 text-right truncate">{record.client.name}</span>
-                  </div>
-                )}
+                {/* Решта — як є */}
                 <div className="flex justify-between gap-2">
                   <span className="flex-shrink-0">Оплата</span>
                   <span className="text-gray-800">{{ cash: 'Готівка', card: 'Картка', fop: 'ФОП' }[record.payment_method]}</span>

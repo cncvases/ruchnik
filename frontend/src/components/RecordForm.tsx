@@ -40,7 +40,7 @@ export function RecordForm({ initialType = 'income', initialValues, onSubmit, on
     subcategory_id: '',
     client_id: '',
     payment_method: 'cash',
-    status: 'paid',
+    status: 'pending',
     tag_ids: [],
     photos: [],
     dimensions: {},
