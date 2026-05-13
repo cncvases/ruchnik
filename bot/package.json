@@ -1,0 +1,19 @@
+{
+  "name": "ruchnik-bot",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/bot.ts",
+    "start": "tsx src/bot.ts"
+  },
+  "dependencies": {
+    "grammy": "^1.30.0",
+    "pdf-lib": "^1.17.1",
+    "@supabase/supabase-js": "^2.49.4"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.3",
+    "@types/node": "^22.15.18",
+    "typescript": "^5.8.3"
+  }
+}

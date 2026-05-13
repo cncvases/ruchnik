@@ -1,0 +1,18 @@
+Що потрібно зробити далі (налаштування)
+Supabase:
+
+Створити безкоштовний проект на supabase.com
+Виконати SQL з supabase/migrations/001_init.sql
+Скопіювати URL та anon key в frontend/.env
+Telegram Bot:
+
+Створити бота через @BotFather
+Додати TELEGRAM_BOT_TOKEN в bot/.env
+Задеплоїти frontend на Vercel → отримати URL → вказати в MINI_APP_URL
+Суpabase Storage:
+
+Створити bucket photos (public)
+Edge Function telegram-auth:
+
+Задеплоїти supabase/functions/telegram-auth/
+Встановити secret TELEGRAM_BOT_TOKEN в Supabase dashboard
