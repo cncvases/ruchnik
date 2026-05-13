@@ -22,7 +22,10 @@ export function useWorkers() {
 }
 
 export async function createWorker(payload: Partial<Worker>) {
-  const { data, error } = await supabase.from('workers').insert(payload).select().single()
+  const { data: { user } } = await supabase.auth.getUser()
+  // user_id comes from user_metadata set during telegram-auth
+  const userId = user?.user_metadata?.user_db_id
+  const { data, error } = await supabase.from('workers').insert({ ...payload, user_id: userId }).select().single()
   if (error) throw error
   return data
 }
