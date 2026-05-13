@@ -14,6 +14,7 @@ export interface Assignment {
     date: string
     photos: string[]
     dimensions: { width?: number; height?: number; thickness?: number } | null
+    user_id: string
   } | null
 }
 
@@ -27,15 +28,33 @@ export function useAssignments() {
       const { data: { user } } = await supabase.auth.getUser()
       const myUserId = user?.user_metadata?.user_db_id
 
-      const { data } = await supabase
-        .from('record_workers')
-        .select('*, record:records(title, date, photos, dimensions, user_id)')
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false })
+      const { data, error } = await supabase.rpc('get_pending_assignments')
+      if (error) {
+        console.error('get_pending_assignments error:', error)
+        setAssignments([])
+        return
+      }
 
-      // Hide assignments on own records (master sees them via master_select policy)
-      const filtered = (data ?? []).filter((a: any) => a.record?.user_id !== myUserId)
-      setAssignments(filtered as Assignment[])
+      const mapped: Assignment[] = (data ?? []).map((row: any) => ({
+        id: row.id,
+        record_id: row.record_id,
+        worker_id: row.worker_id,
+        amount_paid: row.amount_paid,
+        status: row.status,
+        confirmed_at: row.confirmed_at,
+        created_at: row.created_at,
+        record: row.record_id ? {
+          title: row.record_title,
+          date: row.record_date,
+          photos: row.record_photos ?? [],
+          dimensions: row.record_dimensions,
+          user_id: row.record_user_id,
+        } : null,
+      }))
+
+      // Hide assignments on own records
+      const filtered = mapped.filter(a => a.record?.user_id !== myUserId)
+      setAssignments(filtered)
     } finally {
       setLoading(false)
     }
