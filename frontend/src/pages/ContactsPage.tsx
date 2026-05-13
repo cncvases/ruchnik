@@ -195,17 +195,32 @@ function WorkersList() {
         {filtered.map(worker => (
           <div key={worker.id} className="bg-white rounded-2xl border border-gray-100 px-4 py-3 flex items-center gap-3">
             <button onClick={() => navigate(`/workers/${worker.id}`)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
-              <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
-                {worker.name.charAt(0).toUpperCase()}
+              <div className="relative w-10 h-10 flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-sm font-bold">
+                  {worker.name.charAt(0).toUpperCase()}
+                </div>
+                {worker.worker_user_id && (
+                  <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                    <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5L3.5 6.5L7.5 2.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-gray-900">{worker.name}</div>
                 {worker.role && <div className="text-xs text-purple-400 mt-0.5">{worker.role}</div>}
                 {worker.phone && <div className="text-xs text-gray-400">{worker.phone}</div>}
-                {worker.telegram_username && <div className="text-xs text-blue-400">@{worker.telegram_username}</div>}
+                {worker.telegram_username && (
+                  <div className="text-xs mt-0.5">
+                    <span className="text-blue-400">@{worker.telegram_username}</span>
+                    {worker.worker_user_id
+                      ? <span className="text-green-500 ml-1.5">● в додатку</span>
+                      : <span className="text-gray-300 ml-1.5">● не підключений</span>
+                    }
+                  </div>
+                )}
               </div>
             </button>
-            {worker.telegram_username && (
+            {worker.telegram_username && !worker.worker_user_id && (
               <button
                 onClick={() => window.open(`https://t.me/${worker.telegram_username}?text=${encodeURIComponent('Привіт! Запрошую тебе приєднатися до мене як працівник у додатку Ручнік.\n\nВідкрий додаток через бота: https://t.me/R0003_bot')}`, '_blank')}
                 className="flex-shrink-0 px-2 py-1.5 bg-blue-50 text-blue-500 rounded-xl text-xs font-medium"

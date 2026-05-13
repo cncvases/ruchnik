@@ -24,18 +24,12 @@ export function useAssignments() {
   const fetch = useCallback(async () => {
     setLoading(true)
     try {
-      // Only assignments from OTHER masters (not own records)
-      const { data: { user } } = await supabase.auth.getUser()
-      const myUserId = user?.user_metadata?.user_db_id
-
       const { data } = await supabase
         .from('record_workers')
-        .select('*, record:records(title, date, photos, dimensions, user_id)')
+        .select('*, record:records(title, date, photos, dimensions)')
+        .eq('status', 'pending')
         .order('created_at', { ascending: false })
-
-      // filter out assignments on own records
-      const filtered = (data ?? []).filter((a: any) => a.record?.user_id !== myUserId)
-      setAssignments(filtered as Assignment[])
+      setAssignments((data ?? []) as Assignment[])
     } finally {
       setLoading(false)
     }

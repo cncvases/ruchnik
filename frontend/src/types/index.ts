@@ -48,6 +48,7 @@ export interface Worker {
   role: string | null
   notes: string | null
   telegram_username: string | null
+  worker_user_id: string | null
   created_at: string
 }
 

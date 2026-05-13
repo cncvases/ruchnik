@@ -73,6 +73,16 @@ serve(async (req) => {
 
     if (userError) throw userError
 
+    // Auto-link worker records where telegram_username matches this user
+    const tgUsername = tgUser.username
+    if (tgUsername) {
+      await supabaseAdmin
+        .from('workers')
+        .update({ worker_user_id: user.id })
+        .eq('telegram_username', tgUsername)
+        .is('worker_user_id', null)
+    }
+
     const email = `tg${telegramId}@ruchnik.app`
     const password = `tg-${telegramId}-${botToken.slice(0, 8)}`
 
