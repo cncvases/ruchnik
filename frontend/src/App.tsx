@@ -17,7 +17,13 @@ const EditRecordPage = lazy(() => import('./pages/EditRecordPage').then(m => ({ 
 function getStartParam(): string | null {
   try {
     const tg = (window as any).Telegram?.WebApp
-    return tg?.initDataUnsafe?.start_param ?? null
+    const param = tg?.initDataUnsafe?.start_param ?? null
+    if (param) console.log('start_param:', param)
+    // Also check URL hash for ?startapp= fallback
+    const hash = window.location.hash
+    const urlParam = new URLSearchParams(hash.includes('?') ? hash.split('?')[1] : '').get('startapp')
+    if (urlParam) console.log('startapp from URL:', urlParam)
+    return param ?? urlParam ?? null
   } catch {
     return null
   }
