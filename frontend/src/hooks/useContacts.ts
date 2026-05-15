@@ -79,7 +79,7 @@ export async function searchUsers(query: string) {
   const { data } = await supabase
     .from('users')
     .select('id, name, telegram_id')
-    .or(`name.ilike.%${q}%`)
+    .ilike('name', `%${q}%`)
     .neq('id', myId)
     .limit(20)
 
