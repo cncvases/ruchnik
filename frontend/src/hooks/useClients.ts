@@ -11,12 +11,15 @@ export function useClients() {
     setLoading(true)
     setError(null)
     try {
-      const { data, error: err } = await supabase
-        .from('clients')
-        .select('*')
-        .order('name')
+      const [{ data, error: err }, { data: contactData }] = await Promise.all([
+        supabase.from('clients').select('*').order('name'),
+        supabase.from('contacts').select('id,name,phone,telegram_username,notes').eq('is_client', true).eq('status', 'accepted').order('name'),
+      ])
       if (err) throw err
-      setClients(data ?? [])
+      const fromContacts = (contactData ?? []).map((c: any) => ({
+        ...c, user_id: '', created_at: '', _from_contacts: true,
+      }))
+      setClients([...(data ?? []), ...fromContacts])
     } catch (e: any) {
       setError(e.message)
     } finally {
