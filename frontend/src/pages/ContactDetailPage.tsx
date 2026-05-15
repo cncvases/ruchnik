@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { updateContact, deleteContact } from '../hooks/useContacts'
+import { deleteContact } from '../hooks/useContacts'
 import type { Contact } from '../types'
 
 const ROLES = [
@@ -46,8 +46,14 @@ export function ContactDetailPage() {
     if (!id || !name.trim()) return
     setSaving(true)
     try {
-      await updateContact(id, { name: name.trim(), phone: phone || null, notes: notes || null, ...roles })
+      const { error } = await supabase
+        .from('contacts')
+        .update({ name: name.trim(), phone: phone || null, notes: notes || null, ...roles })
+        .eq('id', id)
+      if (error) throw error
       navigate(-1)
+    } catch (e: any) {
+      alert('Помилка: ' + (e?.message ?? String(e)))
     } finally {
       setSaving(false)
     }
