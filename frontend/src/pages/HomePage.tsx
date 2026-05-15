@@ -95,7 +95,7 @@ export function HomePage() {
       dimensions: Object.keys(values.dimensions).length ? values.dimensions : null,
       photos: values.photos,
       tag_ids: values.tag_ids,
-      worker_assignments: values.worker_assignments?.filter((wa: any) => wa.worker_id && wa.amount && !wa.worker_id.startsWith('contact:')).map((wa: any) => ({ worker_id: wa.worker_id, amount: Number(wa.amount) })),
+      worker_assignments: values.worker_assignments?.filter((wa: any) => wa.worker_id && wa.amount).map((wa: any) => ({ worker_id: wa.worker_id, amount: Number(wa.amount) })),
     })
     setShowForm(false)
     refetch()

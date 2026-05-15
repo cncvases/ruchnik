@@ -72,6 +72,50 @@ export function useRecords(filters: Filters = {}) {
   return { records, loading, error, refetch: fetch, updateLocalStatus }
 }
 
+async function resolveWorkerIds(assignments: { worker_id: string, amount: number }[]) {
+  const { data: { user } } = await supabase.auth.getUser()
+  const userId = user?.user_metadata?.user_db_id
+
+  const resolved = await Promise.all(assignments.map(async wa => {
+    if (!wa.worker_id.startsWith('contact:')) return wa
+
+    const contactId = wa.worker_id.replace('contact:', '')
+
+    // Check if worker already exists for this contact
+    const { data: existing } = await supabase
+      .from('workers')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('notes', `contact:${contactId}`)
+      .single()
+
+    if (existing) return { ...wa, worker_id: existing.id }
+
+    // Get contact info and create worker
+    const { data: contact } = await supabase
+      .from('contacts')
+      .select('name, phone, linked_user_id')
+      .eq('id', contactId)
+      .single()
+
+    const { data: newWorker } = await supabase
+      .from('workers')
+      .insert({
+        user_id: userId,
+        name: contact?.name ?? 'Працівник',
+        phone: contact?.phone ?? null,
+        worker_user_id: contact?.linked_user_id ?? null,
+        notes: `contact:${contactId}`,
+      })
+      .select()
+      .single()
+
+    return { ...wa, worker_id: newWorker?.id ?? wa.worker_id }
+  }))
+
+  return resolved
+}
+
 export async function createRecord(payload: Partial<Record> & { tag_ids?: string[], worker_assignments?: { worker_id: string, amount: number }[] }) {
   const { tag_ids, worker_assignments, ...record } = payload
   const { data, error } = await supabase.from('records').insert(record).select().single()
@@ -80,8 +124,9 @@ export async function createRecord(payload: Partial<Record> & { tag_ids?: string
     await supabase.from('record_tags').insert(tag_ids.map(tag_id => ({ record_id: data.id, tag_id })))
   }
   if (worker_assignments?.length) {
+    const resolved = await resolveWorkerIds(worker_assignments)
     await supabase.from('record_workers').insert(
-      worker_assignments.map(wa => ({ record_id: data.id, worker_id: wa.worker_id, amount_paid: wa.amount }))
+      resolved.map(wa => ({ record_id: data.id, worker_id: wa.worker_id, amount_paid: wa.amount }))
     )
   }
   return data
@@ -121,8 +166,9 @@ export async function updateRecord(id: string, payload: Partial<Record> & { tag_
 
     const toInsert = worker_assignments.filter(wa => !existingMap.has(wa.worker_id))
     if (toInsert.length) {
+      const resolved = await resolveWorkerIds(toInsert)
       await supabase.from('record_workers').insert(
-        toInsert.map(wa => ({ record_id: id, worker_id: wa.worker_id, amount_paid: wa.amount }))
+        resolved.map(wa => ({ record_id: id, worker_id: wa.worker_id, amount_paid: wa.amount }))
       )
     }
   }
