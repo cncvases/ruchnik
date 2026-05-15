@@ -7,7 +7,7 @@ import {
   createTag, deleteTag,
 } from '../hooks/useCategories'
 import { useCatalog, createCatalogItem, updateCatalogItem, deleteCatalogItem } from '../hooks/useCatalog'
-import { createInvite, acceptInvite } from '../hooks/useContacts'
+import { createInvite } from '../hooks/useContacts'
 import { formatMoney } from '../lib/format'
 import { PageHeader } from '../components/PageHeader'
 import type { RecordType } from '../types'
@@ -171,10 +171,6 @@ function TagsSection() {
 function InviteSection() {
   const [myCode, setMyCode] = useState<string | null>(null)
   const [generating, setGenerating] = useState(false)
-  const [inputCode, setInputCode] = useState('')
-  const [accepting, setAccepting] = useState(false)
-  const [acceptResult, setAcceptResult] = useState<string | null>(null)
-  const [acceptError, setAcceptError] = useState<string | null>(null)
 
   async function handleGenerate() {
     setGenerating(true)
@@ -204,64 +200,19 @@ function InviteSection() {
         <p className="text-xs text-gray-400 mt-0.5">Запросити людину до своїх контактів</p>
       </div>
       <div className="px-4 py-3 flex flex-col gap-3">
-        {/* Generate own code */}
-        <div>
-          <p className="text-xs text-gray-400 mb-1.5">Надіслати запрошення</p>
-          {myCode ? (
-            <div className="flex items-center gap-3 bg-blue-50 rounded-xl px-3 py-2.5">
-              <span className="font-mono text-lg font-bold text-blue-600 tracking-widest">{myCode}</span>
-              <button onClick={handleShare} className="ml-auto flex items-center gap-1.5 text-sm text-blue-500 font-medium">
-                <Share2 size={15} /> Поділитися
-              </button>
-            </div>
-          ) : (
-            <button onClick={handleGenerate} disabled={generating}
-              className="w-full py-2.5 bg-blue-500 text-white rounded-xl text-sm font-medium disabled:opacity-50">
-              {generating ? 'Генерація...' : '+ Створити інвайт-код'}
+        {myCode ? (
+          <div className="flex items-center gap-3 bg-blue-50 rounded-xl px-3 py-2.5">
+            <span className="font-mono text-lg font-bold text-blue-600 tracking-widest">{myCode}</span>
+            <button onClick={handleShare} className="ml-auto flex items-center gap-1.5 text-sm text-blue-500 font-medium">
+              <Share2 size={15} /> Поділитися
             </button>
-          )}
-        </div>
-
-        {/* Accept someone's code */}
-        <div className="border-t border-gray-100 pt-3">
-          <p className="text-xs text-gray-400 mb-1.5">Ввести код запрошення</p>
-          {acceptResult ? (
-            <div className="bg-green-50 rounded-xl px-3 py-2.5 text-sm text-green-700 font-medium text-center">
-              ✓ {acceptResult}
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <input
-                value={inputCode}
-                onChange={e => { setInputCode(e.target.value.toUpperCase()); setAcceptError(null) }}
-                placeholder="Введіть код (6 символів)"
-                maxLength={6}
-                className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:border-blue-400 font-mono tracking-widest uppercase"
-              />
-              <button
-                onClick={async () => {
-                  if (inputCode.length < 4) return
-                  setAccepting(true)
-                  setAcceptError(null)
-                  try {
-                    const { inviterName } = await acceptInvite(inputCode)
-                    setAcceptResult(`Додано до контактів: ${inviterName}`)
-                    setInputCode('')
-                  } catch (e: any) {
-                    setAcceptError(e.message)
-                  } finally {
-                    setAccepting(false)
-                  }
-                }}
-                disabled={accepting || inputCode.length < 4}
-                className="px-4 py-2 bg-green-500 text-white rounded-xl text-sm font-medium disabled:opacity-50"
-              >
-                {accepting ? '...' : 'OK'}
-              </button>
-            </div>
-          )}
-          {acceptError && <p className="text-xs text-red-500 mt-1">{acceptError}</p>}
-        </div>
+          </div>
+        ) : (
+          <button onClick={handleGenerate} disabled={generating}
+            className="w-full py-2.5 bg-blue-500 text-white rounded-xl text-sm font-medium disabled:opacity-50">
+            {generating ? 'Генерація...' : '+ Створити інвайт-код'}
+          </button>
+        )}
       </div>
     </div>
   )

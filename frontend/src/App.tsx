@@ -2,9 +2,9 @@ import { useEffect, useState, lazy, Suspense } from 'react'
 import { HashRouter, Routes, Route } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav'
 import { HomePage } from './pages/HomePage'
-import { RegistrationScreen } from './pages/RegistrationScreen'
+import { InviteAcceptScreen } from './pages/InviteAcceptScreen'
 import { initTelegram, getTelegramInitData, isDev } from './lib/telegram'
-import { signInWithTelegram, supabase } from './lib/supabase'
+import { signInWithTelegram } from './lib/supabase'
 
 const RecordsPage = lazy(() => import('./pages/RecordsPage').then(m => ({ default: m.RecordsPage })))
 const StatisticsPage = lazy(() => import('./pages/StatisticsPage').then(m => ({ default: m.StatisticsPage })))
@@ -14,11 +14,25 @@ const WorkerDetailPage = lazy(() => import('./pages/WorkerDetailPage').then(m =>
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })))
 const EditRecordPage = lazy(() => import('./pages/EditRecordPage').then(m => ({ default: m.EditRecordPage })))
 
+function getStartParam(): string | null {
+  try {
+    const tg = (window as any).Telegram?.WebApp
+    const param = tg?.initDataUnsafe?.start_param ?? null
+    if (param) console.log('start_param:', param)
+    // Also check URL hash for ?startapp= fallback
+    const hash = window.location.hash
+    const urlParam = new URLSearchParams(hash.includes('?') ? hash.split('?')[1] : '').get('startapp')
+    if (urlParam) console.log('startapp from URL:', urlParam)
+    return param ?? urlParam ?? null
+  } catch {
+    return null
+  }
+}
+
 function App() {
   const [ready, setReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [needsRegistration, setNeedsRegistration] = useState(false)
-  const [userId, setUserId] = useState<string | null>(null)
+  const [inviteCode, setInviteCode] = useState<string | null>(null)
 
   useEffect(() => {
     async function init() {
@@ -30,21 +44,10 @@ function App() {
         }
         const initData = getTelegramInitData()
         if (!initData) throw new Error('No Telegram initData')
-        const authData = await signInWithTelegram(initData)
+        await signInWithTelegram(initData)
 
-        const uid = authData?.user?.id
-        if (uid) {
-          setUserId(uid)
-          const { data: profile } = await supabase
-            .from('users')
-            .select('is_registered')
-            .eq('id', uid)
-            .single()
-
-          if (!profile?.is_registered) {
-            setNeedsRegistration(true)
-          }
-        }
+        const param = getStartParam()
+        if (param) setInviteCode(param)
 
         setReady(true)
       } catch (e: any) {
@@ -75,8 +78,8 @@ function App() {
     )
   }
 
-  if (needsRegistration && userId) {
-    return <RegistrationScreen userId={userId} onDone={() => setNeedsRegistration(false)} />
+  if (inviteCode) {
+    return <InviteAcceptScreen code={inviteCode} onDone={() => setInviteCode(null)} />
   }
 
   return (
