@@ -14,7 +14,7 @@ export function useWorkers() {
         supabase.from('contacts').select('id,name,phone,notes,linked_user_id').eq('is_worker', true).eq('status', 'accepted').order('name'),
       ])
       const fromContacts = (contactData ?? []).map((c: any) => ({
-        id: c.id, user_id: '', name: c.name, phone: c.phone, role: null,
+        id: `contact:${c.id}`, user_id: '', name: c.name, phone: c.phone, role: null,
         notes: c.notes, telegram_username: null,
         worker_user_id: c.linked_user_id, created_at: '', _from_contacts: true,
       }))

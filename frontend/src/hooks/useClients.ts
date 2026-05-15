@@ -17,7 +17,7 @@ export function useClients() {
       ])
       if (err) throw err
       const fromContacts = (contactData ?? []).map((c: any) => ({
-        ...c, user_id: '', created_at: '', _from_contacts: true,
+        ...c, id: `contact:${c.id}`, user_id: '', created_at: '', _from_contacts: true,
       }))
       setClients([...(data ?? []), ...fromContacts])
     } catch (e: any) {

@@ -89,13 +89,13 @@ export function HomePage() {
       description: values.description || null,
       category_id: values.category_id || null,
       subcategory_id: values.subcategory_id || null,
-      client_id: values.client_id || null,
+      client_id: (values.client_id && !values.client_id.startsWith('contact:')) ? values.client_id : null,
       payment_method: values.payment_method,
       status: values.status,
       dimensions: Object.keys(values.dimensions).length ? values.dimensions : null,
       photos: values.photos,
       tag_ids: values.tag_ids,
-      worker_assignments: values.worker_assignments?.filter((wa: any) => wa.worker_id && wa.amount).map((wa: any) => ({ worker_id: wa.worker_id, amount: Number(wa.amount) })),
+      worker_assignments: values.worker_assignments?.filter((wa: any) => wa.worker_id && wa.amount && !wa.worker_id.startsWith('contact:')).map((wa: any) => ({ worker_id: wa.worker_id, amount: Number(wa.amount) })),
     })
     setShowForm(false)
     refetch()
