@@ -111,31 +111,12 @@ export async function sendContactRequest(targetUserId: string, targetName: strin
 }
 
 export async function acceptContactRequest(contactId: string, requesterId: string, requesterName: string) {
-  const { data: { user } } = await supabase.auth.getUser()
-  const myId = user?.user_metadata?.user_db_id
-
-  // Update their contact to accepted
-  await supabase.from('contacts').update({ status: 'accepted' }).eq('id', contactId)
-
-  // Create reverse contact (me → them) if not exists
-  const { data: existing } = await supabase
-    .from('contacts')
-    .select('id')
-    .eq('owner_user_id', myId)
-    .eq('linked_user_id', requesterId)
-    .single()
-
-  if (!existing) {
-    await supabase.from('contacts').insert({
-      owner_user_id: myId,
-      linked_user_id: requesterId,
-      name: requesterName,
-      status: 'accepted',
-      initiated_by: requesterId,
-    })
-  } else {
-    await supabase.from('contacts').update({ status: 'accepted' }).eq('id', (existing as any).id)
-  }
+  const { error } = await supabase.rpc('accept_contact_request', {
+    p_contact_id: contactId,
+    p_requester_id: requesterId,
+    p_requester_name: requesterName,
+  })
+  if (error) throw error
 }
 
 export async function rejectContactRequest(contactId: string) {
