@@ -13,6 +13,7 @@ const ClientDetailPage = lazy(() => import('./pages/ClientDetailPage').then(m =>
 const WorkerDetailPage = lazy(() => import('./pages/WorkerDetailPage').then(m => ({ default: m.WorkerDetailPage })))
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })))
 const EditRecordPage = lazy(() => import('./pages/EditRecordPage').then(m => ({ default: m.EditRecordPage })))
+const ContactDetailPage = lazy(() => import('./pages/ContactDetailPage').then(m => ({ default: m.ContactDetailPage })))
 
 function getStartParam(): string | null {
   try {
@@ -89,6 +90,7 @@ function App() {
               <Route path="/contacts" element={<ContactsPage />} />
               <Route path="/clients/:id" element={<ClientDetailPage />} />
               <Route path="/workers/:id" element={<WorkerDetailPage />} />
+              <Route path="/contacts/:id" element={<ContactDetailPage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Routes>
           </Suspense>

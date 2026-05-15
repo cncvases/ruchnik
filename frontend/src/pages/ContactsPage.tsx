@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Plus, Search, ChevronRight, UserPlus, Check, X } from 'lucide-react'
 import { useClients, createClient } from '../hooks/useClients'
 import { useWorkers, createWorker } from '../hooks/useWorkers'
-import { useConnections, searchUsers, sendContactRequest, acceptContactRequest, rejectContactRequest } from '../hooks/useContacts'
+import { useConnections, useContactsByRole, searchUsers, sendContactRequest, acceptContactRequest, rejectContactRequest } from '../hooks/useContacts'
 
 type Tab = 'clients' | 'workers' | 'connections'
 
@@ -50,6 +50,7 @@ export function ContactsPage() {
 function ClientsList() {
   const navigate = useNavigate()
   const { clients, loading, refetch } = useClients()
+  const { contacts: linkedClients } = useContactsByRole('is_client')
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [newName, setNewName] = useState('')
@@ -125,6 +126,20 @@ function ClientsList() {
             <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
           </button>
         ))}
+        {linkedClients.filter(c => c.name.toLowerCase().includes(search.toLowerCase())).map(c => (
+          <button key={c.id} onClick={() => navigate(`/contacts/${c.id}`)}
+            className="bg-white rounded-2xl border border-blue-50 px-4 py-3 flex items-center gap-3 text-left w-full">
+            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+              {c.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium text-gray-900">{c.name}</div>
+              {c.phone && <div className="text-xs text-gray-400 mt-0.5">{c.phone}</div>}
+              <div className="text-xs text-blue-400">З контактів</div>
+            </div>
+            <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
+          </button>
+        ))}
       </div>
     </>
   )
@@ -133,6 +148,7 @@ function ClientsList() {
 function WorkersList() {
   const navigate = useNavigate()
   const { workers, loading, refetch } = useWorkers()
+  const { contacts: linkedWorkers } = useContactsByRole('is_worker')
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [newName, setNewName] = useState('')
@@ -240,12 +256,27 @@ function WorkersList() {
             <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
           </div>
         ))}
+        {linkedWorkers.filter(c => c.name.toLowerCase().includes(search.toLowerCase())).map(c => (
+          <button key={c.id} onClick={() => navigate(`/contacts/${c.id}`)}
+            className="bg-white rounded-2xl border border-purple-50 px-4 py-3 flex items-center gap-3 text-left w-full">
+            <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+              {c.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium text-gray-900">{c.name}</div>
+              {c.phone && <div className="text-xs text-gray-400 mt-0.5">{c.phone}</div>}
+              <div className="text-xs text-purple-400">З контактів</div>
+            </div>
+            <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
+          </button>
+        ))}
       </div>
     </>
   )
 }
 
 function ConnectionsList() {
+  const navigate = useNavigate()
   const { accepted, incoming, loading, refetch } = useConnections()
   const [search, setSearch] = useState('')
   const [searchResults, setSearchResults] = useState<any[]>([])
@@ -364,14 +395,21 @@ function ConnectionsList() {
             <p className="text-xs text-gray-400 mb-2">Мої контакти ({accepted.length})</p>
             {accepted.map((c: any) => (
               <div key={c.id} className="bg-white rounded-2xl border border-gray-100 px-4 py-3 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
-                  {c.name.charAt(0).toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-gray-900">{c.name}</div>
-                </div>
-                <button onClick={() => handleReject(c.id).then(refetch)}
-                  className="text-gray-300 p-1"><X size={15} /></button>
+                <button onClick={() => navigate(`/contacts/${c.id}`)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
+                  <div className="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                    {c.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-900">{c.name}</div>
+                    <div className="flex gap-1 mt-0.5 flex-wrap">
+                      {c.is_client && <span className="text-xs text-blue-500">Замовник</span>}
+                      {c.is_worker && <span className="text-xs text-purple-500">Працівник</span>}
+                      {c.is_partner && <span className="text-xs text-green-500">Напарник</span>}
+                      {c.is_supplier && <span className="text-xs text-orange-500">Постачальник</span>}
+                    </div>
+                  </div>
+                </button>
+                <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
               </div>
             ))}
           </div>

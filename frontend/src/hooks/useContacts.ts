@@ -2,6 +2,30 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Contact } from '../types'
 
+export function useContactsByRole(role: 'is_client' | 'is_worker' | 'is_partner' | 'is_supplier') {
+  const [contacts, setContacts] = useState<Contact[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const fetch = useCallback(async () => {
+    setLoading(true)
+    try {
+      const { data } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq(role, true)
+        .eq('status', 'accepted')
+        .order('name')
+      setContacts(data ?? [])
+    } finally {
+      setLoading(false)
+    }
+  }, [role])
+
+  useEffect(() => { fetch() }, [fetch])
+
+  return { contacts, loading, refetch: fetch }
+}
+
 export function useContacts() {
   const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)

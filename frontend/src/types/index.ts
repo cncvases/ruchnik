@@ -63,6 +63,9 @@ export interface Contact {
   is_client: boolean
   is_worker: boolean
   is_partner: boolean
+  is_supplier: boolean
+  status?: string
+  initiated_by?: string | null
   created_at: string
 }
 
