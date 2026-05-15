@@ -9,11 +9,15 @@ const MINI_APP_URL = process.env.MINI_APP_URL!
 const bot = new Bot(BOT_TOKEN)
 
 bot.command('start', async (ctx) => {
-  const keyboard = new InlineKeyboard().webApp('Відкрити Ручнік 💎', MINI_APP_URL)
-  await ctx.reply(
-    'Привіт! Я бот Ручнік — твій фінансовий записник майстра по граніту.\n\nНатисни кнопку щоб відкрити додаток:',
-    { reply_markup: keyboard }
-  )
+  const param = ctx.message.text.split(' ')[1]
+  const appUrl = param ? `${MINI_APP_URL}?startapp=${param}` : MINI_APP_URL
+  const keyboard = new InlineKeyboard().webApp('Відкрити Ручнік 💎', appUrl)
+
+  const text = param
+    ? 'Привіт! Тебе запросили в Ручнік. Натисни кнопку щоб прийняти запрошення:'
+    : 'Привіт! Я бот Ручнік — твій фінансовий записник майстра по граніту.\n\nНатисни кнопку щоб відкрити додаток:'
+
+  await ctx.reply(text, { reply_markup: keyboard })
 })
 
 // Handle report request from Mini App via sendData / web_app_data

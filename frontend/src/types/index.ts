@@ -52,6 +52,41 @@ export interface Worker {
   created_at: string
 }
 
+export interface Contact {
+  id: string
+  owner_user_id: string
+  linked_user_id: string | null
+  name: string
+  phone: string | null
+  telegram_username: string | null
+  notes: string | null
+  is_client: boolean
+  is_worker: boolean
+  is_partner: boolean
+  created_at: string
+}
+
+export interface Invite {
+  id: string
+  code: string
+  creator_user_id: string
+  used_by_user_id: string | null
+  used_at: string | null
+  created_at: string
+}
+
+export interface CatalogItem {
+  id: string
+  user_id: string
+  name: string
+  description: string | null
+  price: number | null
+  photos: string[]
+  is_active: boolean
+  sort_order: number
+  created_at: string
+}
+
 export interface RecordWorker {
   id: string
   record_id: string

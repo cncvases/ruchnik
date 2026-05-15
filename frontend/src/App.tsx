@@ -2,6 +2,7 @@ import { useEffect, useState, lazy, Suspense } from 'react'
 import { HashRouter, Routes, Route } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav'
 import { HomePage } from './pages/HomePage'
+import { InviteAcceptScreen } from './pages/InviteAcceptScreen'
 import { initTelegram, getTelegramInitData, isDev } from './lib/telegram'
 import { signInWithTelegram } from './lib/supabase'
 
@@ -13,9 +14,19 @@ const WorkerDetailPage = lazy(() => import('./pages/WorkerDetailPage').then(m =>
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })))
 const EditRecordPage = lazy(() => import('./pages/EditRecordPage').then(m => ({ default: m.EditRecordPage })))
 
+function getStartParam(): string | null {
+  try {
+    const tg = (window as any).Telegram?.WebApp
+    return tg?.initDataUnsafe?.start_param ?? null
+  } catch {
+    return null
+  }
+}
+
 function App() {
   const [ready, setReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [inviteCode, setInviteCode] = useState<string | null>(null)
 
   useEffect(() => {
     async function init() {
@@ -28,6 +39,10 @@ function App() {
         const initData = getTelegramInitData()
         if (!initData) throw new Error('No Telegram initData')
         await signInWithTelegram(initData)
+
+        const param = getStartParam()
+        if (param) setInviteCode(param)
+
         setReady(true)
       } catch (e: any) {
         setError(e.message)
@@ -55,6 +70,10 @@ function App() {
         <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
+  }
+
+  if (inviteCode) {
+    return <InviteAcceptScreen code={inviteCode} onDone={() => setInviteCode(null)} />
   }
 
   return (
