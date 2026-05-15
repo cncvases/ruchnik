@@ -106,7 +106,7 @@ function ClientsList() {
 
       <div className="flex-1 overflow-y-auto pb-20 px-4 pt-2 flex flex-col gap-2">
         {loading && <div className="text-center text-gray-400 py-12 text-sm">Завантаження...</div>}
-        {!loading && filtered.length === 0 && (
+        {!loading && filtered.length === 0 && linkedClients.length === 0 && (
           <div className="text-center text-gray-400 py-12 text-sm">
             <p className="text-4xl mb-3">👥</p>
             <p>{search ? 'Нічого не знайдено' : 'Немає замовників'}</p>
@@ -211,7 +211,7 @@ function WorkersList() {
 
       <div className="flex-1 overflow-y-auto pb-20 px-4 pt-2 flex flex-col gap-2">
         {loading && <div className="text-center text-gray-400 py-12 text-sm">Завантаження...</div>}
-        {!loading && filtered.length === 0 && (
+        {!loading && filtered.length === 0 && linkedWorkers.length === 0 && (
           <div className="text-center text-gray-400 py-12 text-sm">
             <p className="text-4xl mb-3">👷</p>
             <p>{search ? 'Нічого не знайдено' : 'Немає працівників'}</p>
