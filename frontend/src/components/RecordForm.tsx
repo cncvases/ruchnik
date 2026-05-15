@@ -1,10 +1,9 @@
 import { useState, useRef } from 'react'
-import { X, Camera, ChevronDown, BookOpen } from 'lucide-react'
+import { X, Camera, ChevronDown } from 'lucide-react'
 import type { RecordType, PaymentMethod, RecordStatus, Dimensions } from '../types'
 import { useCategories, useTags } from '../hooks/useCategories'
 import { useClients, createClient } from '../hooks/useClients'
 import { useWorkers } from '../hooks/useWorkers'
-import { useCatalog } from '../hooks/useCatalog'
 import { supabase } from '../lib/supabase'
 import { toInputDate, formatMoney } from '../lib/format'
 import { haptic } from '../lib/telegram'
@@ -69,9 +68,6 @@ export function RecordForm({ initialType = 'income', initialValues, confirmedWor
   const { tags } = useTags()
   const { clients, refetch: refetchClients } = useClients()
   const { workers } = useWorkers()
-  const { items: catalogItems } = useCatalog()
-  const [showCatalog, setShowCatalog] = useState(false)
-  const activeCatalog = catalogItems.filter(i => i.is_active)
 
   const selectedCategory = categories.find(c => c.id === values.category_id)
   const assignedWorkerIds = values.worker_assignments.map(wa => wa.worker_id)
@@ -166,32 +162,7 @@ export function RecordForm({ initialType = 'income', initialValues, confirmedWor
 
       {/* Title */}
       <div>
-        <div className="flex items-center justify-between mb-1">
-          <label className={labelCls} style={{ marginBottom: 0 }}>Назва</label>
-          {values.type === 'income' && activeCatalog.length > 0 && (
-            <button type="button" onClick={() => setShowCatalog(p => !p)}
-              className="flex items-center gap-1 text-xs text-blue-500 font-medium">
-              <BookOpen size={13} /> З каталогу
-            </button>
-          )}
-        </div>
-        {showCatalog && (
-          <div className="mb-2 bg-blue-50 rounded-xl overflow-hidden border border-blue-100">
-            {activeCatalog.map(item => (
-              <button key={item.id} type="button"
-                onClick={() => {
-                  set('title', item.name)
-                  if (item.price) set('amount', String(item.price))
-                  setShowCatalog(false)
-                  haptic('light')
-                }}
-                className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-blue-100 border-b border-blue-100 last:border-0">
-                <span className="text-sm text-gray-800">{item.name}</span>
-                {item.price && <span className="text-xs text-blue-600 font-medium">{formatMoney(item.price)}</span>}
-              </button>
-            ))}
-          </div>
-        )}
+        <label className={labelCls}>Назва</label>
         <input
           type="text"
           placeholder={values.type === 'income' ? 'Назва доходу...' : 'Назва витрати...'}

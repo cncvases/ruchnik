@@ -1,14 +1,12 @@
 import { useState } from 'react'
-import { Plus, Trash2, ChevronDown, ChevronUp, Share2, ToggleLeft, ToggleRight } from 'lucide-react'
+import { Plus, Trash2, ChevronDown, ChevronUp, Share2 } from 'lucide-react'
 import {
   useCategories, useTags,
   createCategory, deleteCategory,
   createSubcategory, deleteSubcategory,
   createTag, deleteTag,
 } from '../hooks/useCategories'
-import { useCatalog, createCatalogItem, updateCatalogItem, deleteCatalogItem } from '../hooks/useCatalog'
 import { createInvite } from '../hooks/useContacts'
-import { formatMoney } from '../lib/format'
 import { PageHeader } from '../components/PageHeader'
 import type { RecordType } from '../types'
 
@@ -218,89 +216,12 @@ function InviteSection() {
   )
 }
 
-function CatalogSection() {
-  const { items, refetch } = useCatalog()
-  const [showForm, setShowForm] = useState(false)
-  const [newName, setNewName] = useState('')
-  const [newPrice, setNewPrice] = useState('')
-  const [newDesc, setNewDesc] = useState('')
-  const [saving, setSaving] = useState(false)
-
-  const inputCls = 'w-full border border-gray-200 rounded-lg px-2.5 py-2 text-sm bg-gray-50 focus:outline-none focus:border-blue-400'
-
-  async function handleAdd() {
-    if (!newName.trim()) return
-    setSaving(true)
-    try {
-      await createCatalogItem({ name: newName.trim(), price: newPrice ? Number(newPrice) : null, description: newDesc || null })
-      setNewName(''); setNewPrice(''); setNewDesc(''); setShowForm(false)
-      refetch()
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  async function handleToggle(id: string, current: boolean) {
-    await updateCatalogItem(id, { is_active: !current })
-    refetch()
-  }
-
-  async function handleDelete(id: string) {
-    if (!confirm('Видалити позицію?')) return
-    await deleteCatalogItem(id)
-    refetch()
-  }
-
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50">
-        <div>
-          <h3 className="text-sm font-semibold text-gray-700">Каталог послуг</h3>
-          <p className="text-xs text-gray-400 mt-0.5">Товари та послуги вашої фірми</p>
-        </div>
-        <button onClick={() => setShowForm(p => !p)} className="text-blue-500 p-1"><Plus size={18} /></button>
-      </div>
-
-      {showForm && (
-        <div className="px-4 py-3 bg-blue-50 border-b border-gray-100 flex flex-col gap-2">
-          <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Назва *" className={inputCls} />
-          <input value={newPrice} onChange={e => setNewPrice(e.target.value)} type="number" inputMode="decimal" placeholder="Ціна (₴)" className={inputCls} />
-          <input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Опис (необов'язково)" className={inputCls} />
-          <div className="flex gap-2">
-            <button onClick={() => setShowForm(false)} className="flex-1 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600">Скасувати</button>
-            <button onClick={handleAdd} disabled={saving} className="flex-1 py-1.5 rounded-lg bg-blue-500 text-white text-sm font-medium disabled:opacity-50">
-              {saving ? '...' : 'Додати'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className="divide-y divide-gray-50">
-        {items.map(item => (
-          <div key={item.id} className="flex items-center gap-3 px-4 py-3">
-            <div className="flex-1 min-w-0">
-              <div className={`text-sm font-medium ${item.is_active ? 'text-gray-900' : 'text-gray-400'}`}>{item.name}</div>
-              {item.price && <div className="text-xs text-gray-500">{formatMoney(item.price)}</div>}
-            </div>
-            <button onClick={() => handleToggle(item.id, item.is_active)} className={item.is_active ? 'text-blue-500' : 'text-gray-300'}>
-              {item.is_active ? <ToggleRight size={22} /> : <ToggleLeft size={22} />}
-            </button>
-            <button onClick={() => handleDelete(item.id)} className="text-red-400 p-1"><Trash2 size={15} /></button>
-          </div>
-        ))}
-        {items.length === 0 && <div className="text-center text-gray-400 py-4 text-xs">Немає позицій</div>}
-      </div>
-    </div>
-  )
-}
-
 export function SettingsPage() {
   return (
     <div className="flex flex-col h-full overflow-y-auto pb-28">
       <PageHeader title="Налаштування" />
       <div className="px-4 py-4 flex flex-col gap-4">
         <InviteSection />
-        <CatalogSection />
         <CategorySection type="income" label="Категорії доходів" />
         <CategorySection type="expense" label="Категорії витрат" />
         <TagsSection />
