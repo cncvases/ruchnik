@@ -1,15 +1,17 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Search, ChevronRight } from 'lucide-react'
+import { Plus, Search, ChevronRight, UserPlus, Check, X } from 'lucide-react'
 import { useClients, createClient } from '../hooks/useClients'
 import { useWorkers, createWorker } from '../hooks/useWorkers'
+import { useConnections, searchUsers, sendContactRequest, acceptContactRequest, rejectContactRequest } from '../hooks/useContacts'
 
-type Tab = 'clients' | 'workers'
+type Tab = 'clients' | 'workers' | 'connections'
 
 const inputCls = 'w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 focus:outline-none focus:border-blue-400 focus:bg-white transition-colors'
 
 export function ContactsPage() {
   const [tab, setTab] = useState<Tab>('clients')
+  const { incoming } = useConnections()
 
   return (
     <div className="flex flex-col h-full">
@@ -17,23 +19,30 @@ export function ContactsPage() {
       <div className="bg-white border-b border-gray-100 px-4 pt-3 pb-0">
         <h1 className="text-lg font-semibold text-gray-900 mb-3">Контакти</h1>
         <div className="flex gap-1">
-          {(['clients', 'workers'] as Tab[]).map(t => (
+          {(['clients', 'workers', 'connections'] as Tab[]).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`flex-1 py-2 text-sm font-medium rounded-t-xl transition-colors border-b-2 ${
+              className={`flex-1 py-2 text-xs font-medium rounded-t-xl transition-colors border-b-2 relative ${
                 tab === t
                   ? 'text-blue-500 border-blue-500 bg-blue-50'
                   : 'text-gray-500 border-transparent'
               }`}
             >
-              {t === 'clients' ? 'Замовники' : 'Працівники'}
+              {t === 'clients' ? 'Замовники' : t === 'workers' ? 'Працівники' : 'Зв\'язки'}
+              {t === 'connections' && incoming.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                  {incoming.length}
+                </span>
+              )}
             </button>
           ))}
         </div>
       </div>
 
-      {tab === 'clients' ? <ClientsList /> : <WorkersList />}
+      {tab === 'clients' && <ClientsList />}
+      {tab === 'workers' && <WorkersList />}
+      {tab === 'connections' && <ConnectionsList />}
     </div>
   )
 }
@@ -231,6 +240,150 @@ function WorkersList() {
             <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
           </div>
         ))}
+      </div>
+    </>
+  )
+}
+
+function ConnectionsList() {
+  const { accepted, incoming, loading, refetch } = useConnections()
+  const [search, setSearch] = useState('')
+  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [searching, setSearching] = useState(false)
+  const [requestSent, setRequestSent] = useState<Set<string>>(new Set())
+
+  async function handleSearch(q: string) {
+    setSearch(q)
+    if (q.trim().length < 2) { setSearchResults([]); return }
+    setSearching(true)
+    try {
+      const results = await searchUsers(q)
+      setSearchResults(results)
+    } finally {
+      setSearching(false)
+    }
+  }
+
+  async function handleSendRequest(userId: string, name: string) {
+    try {
+      await sendContactRequest(userId, name)
+      setRequestSent(prev => new Set([...prev, userId]))
+    } catch (e: any) {
+      alert(e.message)
+    }
+  }
+
+  async function handleAccept(contactId: string, requesterId: string, requesterName: string) {
+    await acceptContactRequest(contactId, requesterId, requesterName)
+    refetch()
+  }
+
+  async function handleReject(contactId: string) {
+    await rejectContactRequest(contactId)
+    refetch()
+  }
+
+  const acceptedIds = new Set(accepted.map((c: any) => c.linked_user_id))
+
+  return (
+    <>
+      <div className="px-4 py-2 border-b border-gray-100">
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            value={search}
+            onChange={e => handleSearch(e.target.value)}
+            placeholder="Пошук за іменем..."
+            className="w-full pl-9 pr-3 py-2 bg-gray-100 rounded-xl text-sm focus:outline-none"
+          />
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto pb-20 px-4 pt-2 flex flex-col gap-3">
+        {/* Search results */}
+        {search.trim().length >= 2 && (
+          <div>
+            <p className="text-xs text-gray-400 mb-2">Результати пошуку</p>
+            {searching && <div className="text-center text-gray-400 py-4 text-sm">Пошук...</div>}
+            {!searching && searchResults.length === 0 && (
+              <div className="text-center text-gray-400 py-4 text-sm">Нікого не знайдено</div>
+            )}
+            {searchResults.map(u => (
+              <div key={u.id} className="bg-white rounded-2xl border border-gray-100 px-4 py-3 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                  {u.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-gray-900">{u.name}</div>
+                </div>
+                {acceptedIds.has(u.id) ? (
+                  <span className="text-xs text-green-500 font-medium">У контактах</span>
+                ) : requestSent.has(u.id) ? (
+                  <span className="text-xs text-gray-400">Надіслано</span>
+                ) : (
+                  <button onClick={() => handleSendRequest(u.id, u.name)}
+                    className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 text-white rounded-xl text-xs font-medium">
+                    <UserPlus size={13} /> Додати
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Incoming requests */}
+        {incoming.length > 0 && (
+          <div>
+            <p className="text-xs text-gray-400 mb-2">Вхідні запити ({incoming.length})</p>
+            {incoming.map((c: any) => (
+              <div key={c.id} className="bg-white rounded-2xl border border-orange-100 px-4 py-3 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                  {(c.owner?.name ?? c.name ?? '?').charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-gray-900">{c.owner?.name ?? c.name}</div>
+                  <div className="text-xs text-gray-400">хоче додати вас до контактів</div>
+                </div>
+                <button onClick={() => handleAccept(c.id, c.owner_user_id, c.owner?.name ?? c.name)}
+                  className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center">
+                  <Check size={16} />
+                </button>
+                <button onClick={() => handleReject(c.id)}
+                  className="w-8 h-8 bg-red-50 text-red-400 rounded-full flex items-center justify-center ml-1">
+                  <X size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Accepted connections */}
+        {loading && <div className="text-center text-gray-400 py-8 text-sm">Завантаження...</div>}
+        {!loading && accepted.length > 0 && (
+          <div>
+            <p className="text-xs text-gray-400 mb-2">Мої контакти ({accepted.length})</p>
+            {accepted.map((c: any) => (
+              <div key={c.id} className="bg-white rounded-2xl border border-gray-100 px-4 py-3 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                  {c.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-gray-900">{c.name}</div>
+                </div>
+                <button onClick={() => handleReject(c.id).then(refetch)}
+                  className="text-gray-300 p-1"><X size={15} /></button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!loading && accepted.length === 0 && incoming.length === 0 && search.trim().length < 2 && (
+          <div className="text-center text-gray-400 py-12 text-sm">
+            <p className="text-4xl mb-3">🤝</p>
+            <p>Знайдіть людей через пошук</p>
+            <p className="text-xs mt-1">і надішліть їм запит на з'єднання</p>
+          </div>
+        )}
       </div>
     </>
   )
